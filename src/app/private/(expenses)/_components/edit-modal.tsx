@@ -59,6 +59,7 @@ import { SearchableSelect } from "./searchable-select";
 import axios from "axios";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { categories } from "../constants";
 
 interface EditModalProps {
   expense: {
@@ -98,9 +99,9 @@ const inputDescriptions = [
   { name: "paymentStatus", description: "Status atual do pagamento" },
 ];
 
-function getDescription(name: string) {
+function getDescription( name: string ) {
   return (
-    inputDescriptions.find((item) => item.name === name)?.description || ""
+    inputDescriptions.find( ( item ) => item.name === name )?.description || ""
   );
 }
 
@@ -118,53 +119,53 @@ function getDescription(name: string) {
 //   paymentStatus: z.string(),
 // });
 
-function getSchema(scope: "only" | "future" | "all") {
+function getSchema( scope: "only" | "future" | "all" ) {
   const base = {
     amount: z
       .number()
-      .min(0.01, { message: "O valor deve ser maior que zero." }),
+      .min( 0.01, { message: "O valor deve ser maior que zero." } ),
     paymentStatus: z.string(),
     startDate: z
       .string()
-      .nonempty({ message: "A data de início é obrigatória." }),
+      .nonempty( { message: "A data de início é obrigatória." } ),
   };
 
-  if (scope === "only") {
-    return z.object({
+  if ( scope === "only" ) {
+    return z.object( {
       name: z.string().optional(),
       description: z.string().optional(),
       category: z.string().optional(),
       dueDay: z.number().optional(),
       ...base,
-    });
+    } );
   }
 
-  return z.object({
+  return z.object( {
     name: z
       .string()
-      .min(2, { message: "O título deve ter pelo menos 2 caracteres." }),
+      .min( 2, { message: "O título deve ter pelo menos 2 caracteres." } ),
     description: z.string(),
-    category: z.string().nonempty({ message: "A categoria é obrigatória." }),
-    dueDay: z.number().min(1).max(31),
+    category: z.string().nonempty( { message: "A categoria é obrigatória." } ),
+    dueDay: z.number().min( 1 ).max( 31 ),
     ...base,
-  });
+  } );
 }
 
-export function EditModal({
+export function EditModal( {
   expense,
   scope,
   onSuccess,
   nameButton,
-}: EditModalProps) {
-  const [open, setOpen] = useState(false);
-  const [scopeState, setScopeState] = useState<"only" | "future" | "all">(
+}: EditModalProps ) {
+  const [ open, setOpen ] = useState( false );
+  const [ scopeState, setScopeState ] = useState<"only" | "future" | "all">(
     scope
   );
 
-  console.log(expense);
+  console.log( expense );
 
-  const form = useForm<z.infer<ReturnType<typeof getSchema>>>({
-    resolver: zodResolver(getSchema(scopeState)),
+  const form = useForm<z.infer<ReturnType<typeof getSchema>>>( {
+    resolver: zodResolver( getSchema( scopeState ) ),
     defaultValues: {
       name: expense.name,
       description: expense.description || "",
@@ -174,11 +175,11 @@ export function EditModal({
       amount: expense.amount,
       paymentStatus: expense.paymentStatus,
     },
-  });
+  } );
 
-  useEffect(() => {
-    if (open) {
-      form.reset({
+  useEffect( () => {
+    if ( open ) {
+      form.reset( {
         name: expense.name,
         description: expense.description || "",
         category: expense.category,
@@ -186,13 +187,13 @@ export function EditModal({
         startDate: expense.startDate,
         amount: expense.amount,
         paymentStatus: expense.paymentStatus,
-      });
+      } );
     }
-  }, [open, expense]);
+  }, [ open, expense ] );
 
-  useEffect(() => {
+  useEffect( () => {
     // sempre que mudar o escopo dentro do modal, resetar os campos permitidos
-    form.reset({
+    form.reset( {
       name: expense.name,
       description: expense.description || "",
       category: expense.category,
@@ -201,29 +202,29 @@ export function EditModal({
       amount: expense.amount,
       paymentStatus:
         expense.paymentStatus === "due" ? "unpaid" : expense.paymentStatus,
-    });
-  }, [scopeState]);
+    } );
+  }, [ scopeState ] );
 
-  async function onSubmit(data: z.infer<ReturnType<typeof getSchema>>) {
+  async function onSubmit( data: z.infer<ReturnType<typeof getSchema>> ) {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
       await axios.patch(
-        `${apiUrl}/api/expenses/${expense.expenseId}/edit`,
+        `${ apiUrl }/api/expenses/${ expense.expenseId }/edit`,
         {
           scope: scopeState,
-          month: data.startDate.slice(0, 7),
+          month: data.startDate.slice( 0, 7 ),
           updates: data,
         },
         { withCredentials: true }
       );
 
-      toast.success("Despesa editada com sucesso!");
-      setOpen(false);
+      toast.success( "Despesa editada com sucesso!" );
+      setOpen( false );
       onSuccess();
-    } catch (error: any) {
-      console.error("Erro ao editar despesa:", error);
-      toast.error("Erro ao editar a despesa.");
+    } catch ( error: any ) {
+      console.error( "Erro ao editar despesa:", error );
+      toast.error( "Erro ao editar a despesa." );
     }
   }
 
@@ -231,7 +232,7 @@ export function EditModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <DropdownMenuItem
-          onSelect={(prev) => {
+          onSelect={( prev ) => {
             prev.preventDefault();
           }}
         >
@@ -258,8 +259,8 @@ export function EditModal({
                   </div>
                   <Tabs
                     value={scopeState}
-                    onValueChange={(val) =>
-                      setScopeState(val as "only" | "future" | "all")
+                    onValueChange={( val ) =>
+                      setScopeState( val as "only" | "future" | "all" )
                     }
                     className="mb-4 px-1"
                   >
@@ -276,14 +277,14 @@ export function EditModal({
                     {scopeState === "only"
                       ? "somente este mês"
                       : scopeState === "future"
-                      ? "este mês e os próximos"
-                      : "todos os meses"}
+                        ? "este mês e os próximos"
+                        : "todos os meses"}
                   </p>
 
                   <Form {...form}>
                     <form
                       id="dialog-form"
-                      onSubmit={form.handleSubmit(onSubmit)}
+                      onSubmit={form.handleSubmit( onSubmit )}
                       className="space-y-6 px-2"
                     >
                       {/* Title */}
@@ -291,7 +292,7 @@ export function EditModal({
                         <FormField
                           control={form.control}
                           name="name"
-                          render={({ field }) => (
+                          render={( { field } ) => (
                             <FormItem>
                               <div className="flex items-center">
                                 <FormLabel className="mr-1">Título</FormLabel>
@@ -309,7 +310,7 @@ export function EditModal({
                                       side="right"
                                       className="max-w-72"
                                     >
-                                      {getDescription("title")}
+                                      {getDescription( "title" )}
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -331,7 +332,7 @@ export function EditModal({
                         <FormField
                           control={form.control}
                           name="description"
-                          render={({ field }) => (
+                          render={( { field } ) => (
                             <FormItem>
                               <div className="flex items-center">
                                 <FormLabel className="mr-1">
@@ -351,7 +352,7 @@ export function EditModal({
                                       side="right"
                                       className="max-w-72"
                                     >
-                                      {getDescription("description")}
+                                      {getDescription( "description" )}
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -371,7 +372,7 @@ export function EditModal({
                         <FormField
                           control={form.control}
                           name="category"
-                          render={({ field }) => (
+                          render={( { field } ) => (
                             <FormItem>
                               <div className="flex items-center">
                                 <FormLabel className="mr-1">
@@ -391,7 +392,7 @@ export function EditModal({
                                       side="right"
                                       className="max-w-72"
                                     >
-                                      {getDescription("category")}
+                                      {getDescription( "category" )}
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -401,31 +402,7 @@ export function EditModal({
                                   value={field.value || ""}
                                   onChange={field.onChange}
                                   placeholder="Selecione uma categoria"
-                                  options={[
-                                    { value: "Casa", label: "Casa" },
-                                    { value: "Carro", label: "Carro" },
-                                    { value: "Lazer", label: "Lazer" },
-                                    { value: "Saúde", label: "Saúde" },
-                                    { value: "Educação", label: "Educação" },
-                                    {
-                                      value: "Alimentação",
-                                      label: "Alimentação",
-                                    },
-                                    {
-                                      value: "Transporte",
-                                      label: "Transporte",
-                                    },
-                                    { value: "Vestuário", label: "Vestuário" },
-                                    {
-                                      value: "Tecnologia",
-                                      label: "Tecnologia",
-                                    },
-                                    {
-                                      value: "Investimentos",
-                                      label: "Investimentos",
-                                    },
-                                    { value: "Outros", label: "Outros" },
-                                  ]}
+                                  options={categories}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -439,7 +416,7 @@ export function EditModal({
                         <FormField
                           control={form.control}
                           name="dueDay"
-                          render={({ field }) => (
+                          render={( { field } ) => (
                             <FormItem>
                               <div className="flex items-center">
                                 <FormLabel className="mr-1">
@@ -459,24 +436,24 @@ export function EditModal({
                                       side="right"
                                       className="max-w-72"
                                     >
-                                      {getDescription("dueDay")}
+                                      {getDescription( "dueDay" )}
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
                               </div>
                               <FormControl>
                                 <SearchableSelect
-                                  value={String(field.value)}
-                                  onChange={(val) =>
-                                    field.onChange(Number(val))
+                                  value={String( field.value )}
+                                  onChange={( val ) =>
+                                    field.onChange( Number( val ) )
                                   }
                                   placeholder="Selecione o dia"
                                   options={Array.from(
                                     { length: 31 },
-                                    (_, i) => ({
-                                      value: String(i + 1),
-                                      label: String(i + 1),
-                                    })
+                                    ( _, i ) => ( {
+                                      value: String( i + 1 ),
+                                      label: String( i + 1 ),
+                                    } )
                                   )}
                                 />
                               </FormControl>
@@ -490,10 +467,10 @@ export function EditModal({
                         <FormField
                           control={form.control}
                           name="startDate"
-                          render={({ field }) => {
+                          render={( { field } ) => {
                             const id = useId();
                             const date = field.value
-                              ? new Date(field.value)
+                              ? new Date( field.value )
                               : undefined;
 
                             return (
@@ -516,7 +493,7 @@ export function EditModal({
                                         side="right"
                                         className="max-w-72"
                                       >
-                                        {getDescription("startDate")}
+                                        {getDescription( "startDate" )}
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
@@ -539,9 +516,9 @@ export function EditModal({
                                           )}
                                         >
                                           {date
-                                            ? format(date, "PPP", {
-                                                locale: ptBR,
-                                              })
+                                            ? format( date, "PPP", {
+                                              locale: ptBR,
+                                            } )
                                             : "Selecione uma data"}
                                         </span>
                                         <CalendarIcon
@@ -558,8 +535,8 @@ export function EditModal({
                                       <Calendar
                                         mode="single"
                                         selected={date}
-                                        onSelect={(selected) => {
-                                          if (selected) {
+                                        onSelect={( selected ) => {
+                                          if ( selected ) {
                                             field.onChange(
                                               selected.toISOString()
                                             ); // salva no formato string
@@ -581,7 +558,7 @@ export function EditModal({
                       <FormField
                         control={form.control}
                         name="amount"
-                        render={({ field }) => (
+                        render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
                               <FormLabel className="mr-1">
@@ -601,7 +578,7 @@ export function EditModal({
                                     side="right"
                                     className="max-w-72"
                                   >
-                                    {getDescription("defaultValue")}
+                                    {getDescription( "defaultValue" )}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -609,7 +586,7 @@ export function EditModal({
                             <FormControl>
                               <NumberField
                                 value={field.value}
-                                onChange={(value) => field.onChange(value)}
+                                onChange={( value ) => field.onChange( value )}
                                 formatOptions={{
                                   style: "currency",
                                   currency: "BRL",
@@ -652,7 +629,7 @@ export function EditModal({
                         <FormField
                           control={form.control}
                           name="paymentStatus"
-                          render={({ field }) => (
+                          render={( { field } ) => (
                             <FormItem>
                               <div className="flex items-center">
                                 <FormLabel className="mr-1">
@@ -672,7 +649,7 @@ export function EditModal({
                                       side="right"
                                       className="max-w-72"
                                     >
-                                      {getDescription("paymentStatus")}
+                                      {getDescription( "paymentStatus" )}
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>

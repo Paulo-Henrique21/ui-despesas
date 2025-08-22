@@ -12,10 +12,10 @@ import {
 import { PlusIcon } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { optional, z } from "zod";
+import { z } from "zod";
 import { useId, useState, useEffect } from "react";
 import { format } from "date-fns";
-import { fr, ptBR } from "date-fns/locale";
+import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import {
   Popover,
@@ -60,45 +60,11 @@ import { Loader2 } from "lucide-react"; // Adicione este import para um spinner
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "./searchable-select";
 import axios from "axios";
+import { categories, inputDescriptions } from "../constants";
 
 interface ModalProps {
   onCreate?: (info: { year: string; month: string }) => void;
 }
-
-const inputDescriptions = [
-  {
-    name: "title",
-    description:
-      "Nome identificador da despesa (ex: 'Aluguel', 'Conta de Luz')",
-  },
-  {
-    name: "description",
-    description: "Informações adicionais para melhor identificação da despesa",
-  },
-  {
-    name: "category",
-    description:
-      "Classificação da despesa para melhor organização (Casa, Carro, Lazer)",
-  },
-  {
-    name: "dueDay",
-    description: "Dia do mês para vencimento da despesa (1 a 31)",
-  },
-  {
-    name: "startDate",
-    description:
-      "Data inicial a partir da qual a despesa será registrada no sistema",
-  },
-  {
-    name: "defaultValue",
-    description: "Valor padrão da despesa em reais (R$)",
-  },
-  {
-    name: "paymentStatus",
-    description:
-      "Status atual do pagamento. Se marcado como pago, afetará apenas o mês atual. Meses futuros permanecerão como não pagos",
-  },
-];
 
 // Função utilitária para buscar a descrição pelo nome do campo
 function getDescription(name: string) {
@@ -143,24 +109,6 @@ export function Modal({ onCreate }: ModalProps) {
       form.reset(defaultValues);
     }
   }, [open]);
-
-  // async function onSubmit(data: z.infer<typeof FormSchema>) {
-  //   try {
-  //     await axios.post(
-  //       `${process.env.NEXT_PUBLIC_API_URL}/api/expenses`,
-  //       data,
-  //       { withCredentials: true }
-  //     );
-
-  //     toast.success("Despesa criada com sucesso!");
-  //     setOpen(false); // Fecha o modal
-
-  //     // (Opcional) Você pode chamar uma função `refetch` se quiser atualizar a lista na tela
-  //   } catch (error) {
-  //     console.error("Erro ao criar despesa:", error);
-  //     toast.error("Erro ao criar a despesa.");
-  //   }
-  // }
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
@@ -329,25 +277,7 @@ export function Modal({ onCreate }: ModalProps) {
                                 value={field.value}
                                 onChange={field.onChange}
                                 placeholder="Selecione uma categoria"
-                                options={[
-                                  { value: "Casa", label: "Casa" },
-                                  { value: "Carro", label: "Carro" },
-                                  { value: "Lazer", label: "Lazer" },
-                                  { value: "Saúde", label: "Saúde" },
-                                  { value: "Educação", label: "Educação" },
-                                  {
-                                    value: "Alimentação",
-                                    label: "Alimentação",
-                                  },
-                                  { value: "Transporte", label: "Transporte" },
-                                  { value: "Vestuário", label: "Vestuário" },
-                                  { value: "Tecnologia", label: "Tecnologia" },
-                                  {
-                                    value: "Investimentos",
-                                    label: "Investimentos",
-                                  },
-                                  { value: "Outros", label: "Outros" },
-                                ]}
+                                options={categories}
                               />
                             </FormControl>
                             <FormMessage />

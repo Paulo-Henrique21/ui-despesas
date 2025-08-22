@@ -5,6 +5,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { createApiUrl } from "@/lib/api";
 
 // Tipo do usuário
 interface User {
@@ -21,52 +22,65 @@ interface User {
 interface UserContextType {
   user: User | null;
   loading: boolean;
-  loginUser: (userData: User) => void;
+  isLoggingOut: boolean;
+  loginUser: ( userData: User ) => void;
   logoutUser: () => void;
 }
 
 // Criação do contexto tipado
-const UserContext = createContext<UserContextType | undefined>(undefined);
+const UserContext = createContext<UserContextType | undefined>( undefined );
 
 // Provider
-export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export function UserProvider( { children }: { children: ReactNode } ) {
+  const [ user, setUser ] = useState<User | null>( null );
+  const [ loading, setLoading ] = useState( true );
+  const [ isLoggingOut, setIsLoggingOut ] = useState( false );
 
-  const loginUser = (userData: User) => {
-    setUser(userData);
+  const loginUser = ( userData: User ) => {
+    setUser( userData );
   };
 
   const logoutUser = () => {
-    setUser(null);
+    setIsLoggingOut( true );
+    setUser( null );
   };
 
-  useEffect(() => {
+  useEffect( () => {
     async function fetchUserProfile() {
       try {
-        const res = await fetch("http://localhost:8000/api/users/profile", {
+        const res = await fetch( createApiUrl( "/api/users/profile" ), {
           credentials: "include",
-        });
+        } );
         const data = await res.json();
 
-        if (res.ok) {
-          setUser(data.user);
+        if ( res.ok ) {
+          setUser( data.user );
         } else {
-          setUser(null);
+          setUser( null );
+          // Se estivermos em uma rota privada e não conseguirmos carregar o perfil,
+          // redireciona para login
+          if ( typeof window !== 'undefined' && window.location.pathname.startsWith( '/private' ) ) {
+            window.location.href = '/auth/login';
+          }
         }
-      } catch (error) {
-        console.error("Erro ao carregar perfil:", error);
-        setUser(null);
+      } catch ( error ) {
+        console.error( "Erro ao carregar perfil:", error );
+        setUser( null );
+        // Se estivermos em uma rota privada e houver erro ao carregar o perfil,
+        // redireciona para login
+        if ( typeof window !== 'undefined' && window.location.pathname.startsWith( '/private' ) ) {
+          window.location.href = '/auth/login';
+        }
       } finally {
-        setLoading(false);
+        setLoading( false );
       }
     }
 
     fetchUserProfile();
-  }, []);
+  }, [] );
 
   return (
-    <UserContext.Provider value={{ user, loginUser, logoutUser, loading }}>
+    <UserContext.Provider value={{ user, loginUser, logoutUser, loading, isLoggingOut }}>
       {children}
     </UserContext.Provider>
   );
@@ -74,9 +88,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
 // Hook para usar o contexto
 export function useUser() {
-  const context = useContext(UserContext);
-  if (!context) {
-    throw new Error("useUser must be used within a UserProvider");
+  const context = useContext( UserContext );
+  if ( !context ) {
+    throw new Error( "useUser must be used within a UserProvider" );
   }
   return context;
 }

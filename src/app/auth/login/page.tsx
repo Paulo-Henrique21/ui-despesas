@@ -3,9 +3,9 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import Cookies from "js-cookie";
+import { useState } from "react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -26,177 +26,172 @@ import { toast } from "sonner";
 import { ContainerCenter } from "@/components/customized/container-center";
 import { useUser } from "@/hooks/user-context";
 
-const FormSchema = z.object({
-  email: z.string().email("Please enter a valid email."),
-  password: z.string().min(6, "Password must be at least 6 characters."),
-});
+const FormSchema = z.object( {
+  email: z.string().email( "Please enter a valid email." ),
+  password: z.string().min( 6, "Password must be at least 6 characters." ),
+} );
 
 export default function Login() {
-  const form = useForm({
-    resolver: zodResolver(FormSchema),
+  const [ isPasswordVisible, setIsPasswordVisible ] = useState<boolean>( false );
+
+  // Valores padrão para demonstração
+  const demoEmail = process.env.NEXT_PUBLIC_DEMO_EMAIL || "demo@exemplo.com";
+  const demoPassword = process.env.NEXT_PUBLIC_DEMO_PASSWORD || "visitante@2025";
+
+  const form = useForm( {
+    resolver: zodResolver( FormSchema ),
     defaultValues: {
-      email: "",
-      password: "",
+      email: demoEmail,
+      password: demoPassword,
     },
-  });
+  } );
   const { loginUser } = useUser();
 
+  const togglePasswordVisibility = () => setIsPasswordVisible( ( prevState ) => !prevState );
 
-  // async function onSubmit(data: z.infer<typeof FormSchema>) {
-  //   try {
-  //     const response = await fetch("http://localhost:8000/api/users/login", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         email: data.email,
-  //         password: data.password,
-  //       }),
-  //     });
-  //     const responseUser = await response.json();
-  //     console.log(responseUser);
-
-  //     toast.custom(
-  //       (t) => (
-  //         <div className="bg-background text-foreground w-full rounded-md border px-4 py-3 shadow-lg sm:w-[var(--width)]">
-  //           <div className="flex gap-2">
-  //             <div className="flex grow gap-3">
-  //               <CircleCheckIcon
-  //                 className="mt-0.5 shrink-0 text-emerald-500"
-  //                 size={16}
-  //                 aria-hidden="true"
-  //               />
-  //               <div className="flex grow justify-between gap-12">
-  //                 <p className="text-sm">{responseUser.message}</p>
-  //                 {/* <code>{JSON.stringify(data, null, 2)}</code> */}
-  //               </div>
-  //             </div>
-  //             <Button
-  //               variant="ghost"
-  //               className="group -my-1.5 -me-2 size-8 shrink-0 p-0 hover:bg-transparent"
-  //               onClick={() => toast.dismiss(t)}
-  //               aria-label="Close banner"
-  //             >
-  //               <XIcon
-  //                 size={16}
-  //                 className="opacity-60 transition-opacity group-hover:opacity-100"
-  //                 aria-hidden="true"
-  //               />
-  //             </Button>
-  //           </div>
-  //         </div>
-  //       ),
-  //       { duration: 1000 } // Duration in milliseconds (3 seconds)
-  //     );
-  //   } catch (error) {
-  //     console.error("Error during login:", error);
-  //     toast.error("Login failed. Please try again.");
-  //     return;
-  //   }
-  // }
   const router = useRouter();
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit( data: z.infer<typeof FormSchema> ) {
     try {
-      const response = await fetch("http://localhost:8000/api/users/login", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch( `${ apiUrl }/api/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include", // IMPORTANTE: permite que o cookie HTTP-only venha da resposta
-        body: JSON.stringify({
+        body: JSON.stringify( {
           email: data.email,
           password: data.password,
-        }),
-      });
+        } ),
+      } );
 
       const responseUser = await response.json();
-      console.log(responseUser);
+      console.log( responseUser );
 
-      if (response.ok && responseUser) {
-        loginUser(responseUser.user)
-        toast.success("Login realizado com sucesso!");
-        // Aqui você pode salvar no estado/contexto apenas os dados do usuário, se quiser,
-        // mas **não salve o token no localStorage nem no Cookies do frontend**
-        router.push("/private");
+      if ( response.ok && responseUser ) {
+        loginUser( responseUser.user )
+        toast.success( "Login realizado com sucesso!" );
+        router.push( "/private" );
       } else {
-        toast.error(responseUser.message || "Falha no login.");
+        toast.error( responseUser.message || "Falha no login." );
       }
-    } catch (error) {
-      console.error("Error during login:", error);
-      toast.error("Login failed. Please try again.");
+    } catch ( error ) {
+      console.error( "Error during login:", error );
+      toast.error( "Login failed. Please try again." );
       return;
     }
   }
 
   return (
     <ContainerCenter>
-      <div className="h-screen flex justify-center items-center">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle className="text-2xl">Login</CardTitle>
-            <CardDescription>
-              Enter your email below to login to your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="m@example.com"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center">
-                        <FormLabel>Password</FormLabel>
-                        <Link href="#" className="ml-auto text-sm underline">
-                          Forgot your password?
-                        </Link>
-                      </div>
-                      <FormControl>
-                        <Input id="password" type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full">
-                  Login
+      <div className="min-h-screen flex justify-center items-center py-8">
+        <div className="max-w-md w-full space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Login</CardTitle>
+              <CardDescription>
+                Digite o email e senha para fazer login em sua conta
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit( onSubmit )}
+                  className="space-y-5"
+                >
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={( { field } ) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="m@example.com"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={( { field } ) => (
+                      <FormItem>
+                        <div className="flex items-center">
+                          <FormLabel>Senha</FormLabel>
+                          {/* <Link href="#" className="ml-auto text-sm underline">
+                            Forgot your password?
+                          </Link> */}
+                        </div>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              id="password"
+                              placeholder="senha"
+                              className="pe-9"
+                              type={isPasswordVisible ? "text" : "password"}
+                              {...field}
+                            />
+                            <button
+                              className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                              type="button"
+                              onClick={togglePasswordVisibility}
+                              aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                              aria-pressed={isPasswordVisible}
+                              aria-controls="password"
+                            >
+                              {isPasswordVisible ? (
+                                <EyeOffIcon size={16} aria-hidden="true" />
+                              ) : (
+                                <EyeIcon size={16} aria-hidden="true" />
+                              )}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full">
+                    Login
+                  </Button>
+                </form>
+              </Form>
+
+              {/* Botão para entrar como visitante */}
+              <div className="mt-4 space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    form.setValue( 'email', demoEmail );
+                    form.setValue( 'password', demoPassword );
+                    form.handleSubmit( onSubmit )();
+                  }}
+                >
+                  Entrar como visitante
                 </Button>
-                <Button variant="outline" className="w-full">
-                  Login with Google
-                </Button>
-              </form>
-            </Form>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <Link href="/auth/signup" className="underline">
-                Sign up
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+
+                <div className="text-center text-xs text-muted-foreground">
+                  <span className="font-medium">Quer sua própria conta?</span> Entre em contato pelo{" "}
+                  <a
+                    href="https://www.linkedin.com/in/paulo-henrique-souza-dev/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-foreground"
+                  >
+                    LinkedIn
+                  </a>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </ContainerCenter>
   );

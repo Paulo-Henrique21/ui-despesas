@@ -3,22 +3,11 @@
 import * as React from "react";
 import {
   AudioWaveform,
-  BookOpen,
-  Bot,
-  Calculator,
   Command,
-  // Frame,
   GalleryVerticalEnd,
   HandCoins,
-  // Home,
-  // Map,
-  // PieChart,
-  Settings2,
-  SquareTerminal,
 } from "lucide-react";
 
-// import { NavMain } from "@/components/nav-main";
-// import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
@@ -83,41 +72,21 @@ const data: AppSidebarData = {
       label: "",
       items: [
         { title: "Despesas", url: "/private", icon: HandCoins },
-        {
-          title: "Calculadoras",
-          url: "#",
-          icon: Calculator,
-          items: [
-            { title: "Juros compostos", url: "/private/dashboard" },
-            { title: "Juros simples", url: "#" },
-          ],
-        },
-        {
-          title: "Configurações",
-          url: "#",
-          icon: Settings2,
-          items: [
-            { title: "Perfil", url: "#" },
-            { title: "Segurança", url: "#" },
-            { title: "Notificações", url: "#" },
-            { title: "Integrações", url: "#" },
-          ],
-        },
       ],
     },
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar( { ...props }: React.ComponentProps<typeof Sidebar> ) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="min-h-16 max-h-16 border-b">
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        {data.sidebarSections.map((section, index) => (
+        {data.sidebarSections.map( ( section, index ) => (
           <NavSection key={index} label={section.label} items={section.items} />
-        ))}
+        ) )}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

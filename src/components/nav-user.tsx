@@ -24,29 +24,41 @@ import {
   CreditCard,
   LogOut,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export function NavUser() {
-  const { user, logoutUser, loading } = useUser();
-  
+  const { user, logoutUser, loading, isLoggingOut } = useUser();
+  const [ isProcessingLogout, setIsProcessingLogout ] = useState( false );
+
   const { isMobile } = useSidebar();
   const router = useRouter();
 
   async function handleLogout() {
+    if ( isProcessingLogout ) return; // Evita cliques múltiplos
+
+    setIsProcessingLogout( true );
+
     try {
-      await fetch("http://localhost:8000/api/users/logout", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      await fetch( `${ apiUrl }/api/users/logout`, {
         method: "POST",
         credentials: "include",
-      });
+      } );
       logoutUser();
-      router.push("/auth/login");
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
+      // Força uma navegação completa (não client-side routing) para garantir que o middleware seja executado
+      window.location.href = "/auth/login";
+    } catch ( error ) {
+      console.error( "Erro ao fazer logout:", error );
+      // Mesmo se houver erro na API, ainda redireciona para o login
+      logoutUser();
+      window.location.href = "/auth/login";
     }
   }
 
-  if (loading) {
+  if ( loading || isLoggingOut ) {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
@@ -62,7 +74,7 @@ export function NavUser() {
     );
   }
 
-  if (!user) {
+  if ( !user ) {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
@@ -87,7 +99,7 @@ export function NavUser() {
                   alt={user?.name}
                 />
                 <AvatarFallback className="rounded-lg">
-                  {user?.name?.[0]?.toUpperCase() || "?"}
+                  {user?.name?.[ 0 ]?.toUpperCase() || "?"}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -115,7 +127,7 @@ export function NavUser() {
                     alt={user?.name}
                   />
                   <AvatarFallback className="rounded-lg">
-                    {user?.name?.[0]?.toUpperCase() || "?"}
+                    {user?.name?.[ 0 ]?.toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -151,9 +163,9 @@ export function NavUser() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <LogOut />
-              Log out
+            <DropdownMenuItem onClick={handleLogout} disabled={isProcessingLogout}>
+              {isProcessingLogout ? <Loader2 className="animate-spin" /> : <LogOut />}
+              {isProcessingLogout ? "Saindo..." : "Log out"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

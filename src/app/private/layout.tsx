@@ -1,34 +1,19 @@
-// import { Navbar } from "@/components/customized/navbar";
-
-// export default function Layout({ children }: { children: React.ReactNode }) {
-//   return <Navbar>{children}</Navbar>;
-// }
-
 import { AppSidebar } from "@/components/app-sidebar";
 import { ModeToggle } from "@/components/customized/mode-toggle";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout( { children }: { children: React.ReactNode } ) {
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 px-4 transition-[width,height] ease-linear border-b">
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 px-4 transition-[width,height] ease-linear border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center gap-2">
-            <SidebarTrigger className="cursor-pointer"/>
+            <SidebarTrigger className="cursor-pointer" />
             {/* <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
@@ -44,9 +29,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </BreadcrumbList>
             </Breadcrumb> */}
           </div>
-            <div className="ml-auto">
-              <ModeToggle />
-            </div>
+          <div className="ml-auto">
+            <ModeToggle />
+          </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
           {/* <div className="grid auto-rows-min gap-4 md:grid-cols-3">
