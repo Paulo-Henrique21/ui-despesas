@@ -3,6 +3,7 @@
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Modal } from "./_components/modal";
 import { LoadingSkeleton } from "./_components/loading-skeleton";
+import { ContentLoader } from "./_components/content-loader";
 import { IndicatorCards } from "./_components/indicator-cards";
 import { ExpenseChart } from "./_components/expense-chart";
 import { ExpenseTable } from "./_components/expense-table";
@@ -50,7 +51,7 @@ export default function DespesasPage() {
     return (
       <div className="w-full flex justify-center h-full p-4 sm:p-6">
         <div className="w-full max-w-5xl space-y-4 h-full grid grid-cols-1">
-          <LoadingSkeleton showTabsHeader />
+          <ContentLoader message="Carregando despesas..." />
         </div>
       </div>
     );
