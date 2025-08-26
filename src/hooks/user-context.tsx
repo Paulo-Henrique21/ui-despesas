@@ -48,9 +48,8 @@ export function UserProvider( { children }: { children: ReactNode } ) {
   useEffect( () => {
     async function fetchUserProfile() {
       try {
-        const res = await fetch( createApiUrl( "/api/users/profile" ), {
-          credentials: "include",
-        } );
+        const res = await fetch(`/api/bff/me`, { method: "GET", credentials: "include", cache: "no-store" })
+
         const data = await res.json();
 
         if ( res.ok ) {

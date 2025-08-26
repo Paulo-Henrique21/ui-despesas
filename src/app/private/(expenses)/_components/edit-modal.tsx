@@ -207,26 +207,41 @@ export function EditModal( {
 
   async function onSubmit( data: z.infer<ReturnType<typeof getSchema>> ) {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-      await axios.patch(
-        `${ apiUrl }/api/expenses/${ expense.expenseId }/edit`,
-        {
+      const res = await fetch( `/api/bff/expenses/${ expense.expenseId }/edit`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        cache: "no-store",
+        body: JSON.stringify( {
           scope: scopeState,
           month: data.startDate.slice( 0, 7 ),
           updates: data,
-        },
-        { withCredentials: true }
-      );
+        } ),
+      } );
+
+      if ( !res.ok ) {
+        let msg = "Erro ao editar a despesa.";
+        try {
+          const payload = await res.json();
+          msg = payload?.message || msg;
+        } catch {
+          /* ignore */
+        }
+        throw new Error( msg );
+      }
+
+      // opcional: ler a resposta
+      // const updated = await res.json().catch(() => null);
 
       toast.success( "Despesa editada com sucesso!" );
       setOpen( false );
-      onSuccess();
-    } catch ( error: any ) {
+      onSuccess?.();
+    } catch ( error ) {
       console.error( "Erro ao editar despesa:", error );
-      toast.error( "Erro ao editar a despesa." );
+      toast.error( error instanceof Error ? error.message : "Erro ao editar a despesa." );
     }
   }
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

@@ -46,11 +46,13 @@ export function useExpensesData() {
   const fetchData = async (year: string, month: string) => {
     setTabLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const res = await fetch(
-        `${apiUrl}/api/expenses/monthly?month=${year}-${month}`,
-        { credentials: "include" }
-      );
+      const ym = `${year}-${String(month).padStart(2, "0")}`;
+
+      const res = await fetch(`/api/bff/expenses/monthly?month=${ym}`, {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
 
       if (!res.ok) {
         // Se a resposta não for OK (ex: 401 Unauthorized), redireciona para login
@@ -89,7 +91,7 @@ export function useExpensesData() {
   const checkHasBaseExpenses = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const res = await fetch(`${apiUrl}/api/expenses/has-any`, {
+      const res = await fetch(`/api/bff/expenses/has-any`, {
         credentials: "include",
       });
 
@@ -115,14 +117,16 @@ export function useExpensesData() {
   // Deletar despesa
   async function handleDelete(scope: "future" | "all", expense: Expense) {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const month = expense.dueDate.slice(0, 7);
 
       await fetch(
-        `${apiUrl}/api/expenses/${expense.expenseId}/delete?scope=${scope}&month=${month}`,
+        `/api/bff/expenses/${
+          expense.expenseId
+        }/delete?scope=${encodeURIComponent(scope)}&month=${month}`,
         {
           method: "DELETE",
           credentials: "include",
+          cache: "no-store",
         }
       );
 
@@ -142,21 +146,20 @@ export function useExpensesData() {
     currentStatus: "paid" | "unpaid" | "due"
   ) {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const month = dueDate.slice(0, 7);
       const toggledStatus = currentStatus === "paid" ? "unpaid" : "paid";
 
-      await axios.patch(
-        `${apiUrl}/api/expenses/${expenseId}/edit`,
-        {
+      await fetch(`/api/bff/expenses/${expenseId}/edit`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        cache: "no-store",
+        body: JSON.stringify({
           scope: "only",
           month,
-          updates: {
-            paymentStatus: toggledStatus,
-          },
-        },
-        { withCredentials: true }
-      );
+          updates: { paymentStatus: toggledStatus },
+        }),
+      });
 
       const newVisualStatus = getVisualStatus(toggledStatus, dueDate);
 

@@ -63,31 +63,31 @@ import axios from "axios";
 import { categories, inputDescriptions } from "../constants";
 
 interface ModalProps {
-  onCreate?: (info: { year: string; month: string }) => void;
+  onCreate?: ( info: { year: string; month: string } ) => void;
 }
 
 // Função utilitária para buscar a descrição pelo nome do campo
-function getDescription(name: string) {
+function getDescription( name: string ) {
   return (
-    inputDescriptions.find((item) => item.name === name)?.description || ""
+    inputDescriptions.find( ( item ) => item.name === name )?.description || ""
   );
 }
-const FormSchema = z.object({
+const FormSchema = z.object( {
   name: z
     .string()
-    .min(2, { message: "O título deve ter pelo menos 2 caracteres." }),
+    .min( 2, { message: "O título deve ter pelo menos 2 caracteres." } ),
   description: z.string(),
-  category: z.string().nonempty({ message: "A categoria é obrigatória." }),
-  dueDay: z.number().min(1).max(31),
+  category: z.string().nonempty( { message: "A categoria é obrigatória." } ),
+  dueDay: z.number().min( 1 ).max( 31 ),
   startDate: z
     .string()
-    .nonempty({ message: "A data de início é obrigatória." }),
-  amount: z.number().min(0.01, { message: "O valor deve ser maior que zero." }),
+    .nonempty( { message: "A data de início é obrigatória." } ),
+  amount: z.number().min( 0.01, { message: "O valor deve ser maior que zero." } ),
   paymentStatus: z.string(),
-});
+} );
 
-export function Modal({ onCreate }: ModalProps) {
-  const [open, setOpen] = useState(false);
+export function Modal( { onCreate }: ModalProps ) {
+  const [ open, setOpen ] = useState( false );
 
   const defaultValues = {
     name: "Internet",
@@ -99,41 +99,49 @@ export function Modal({ onCreate }: ModalProps) {
     category: "Casa",
   };
 
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const form = useForm<z.infer<typeof FormSchema>>( {
+    resolver: zodResolver( FormSchema ),
     defaultValues,
-  });
+  } );
 
-  useEffect(() => {
-    if (open) {
-      form.reset(defaultValues);
+  useEffect( () => {
+    if ( open ) {
+      form.reset( defaultValues );
     }
-  }, [open]);
+  }, [ open ] );
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit( data: z.infer<typeof FormSchema> ) {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch( `/api/bff/expenses`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        cache: "no-store",
+        body: JSON.stringify( data ),
+      } );
 
-      await axios.post(`${apiUrl}/api/expenses`, data, {
-        withCredentials: true,
-      });
-
-      toast.success("Despesa criada com sucesso!");
-      setOpen(false); // Fecha o modal
-      const start = new Date(data.startDate);
-      const year = String(start.getFullYear());
-      const month = String(start.getMonth() + 1).padStart(2, "0");
-
-      onCreate?.({ year, month });
-    } catch (error: any) {
-      console.error("Erro ao criar despesa:", error);
-      if (error.response) {
-        console.log("Resposta da API:", error.response.data);
+      if ( !res.ok ) {
+        let msg = "Erro ao criar a despesa. Verifique os campos e tente novamente.";
+        try {
+          const payload = await res.json();
+          msg = payload?.message || msg;
+        } catch {
+          /* ignore parse error */
+        }
+        throw new Error( msg );
       }
-      toast.error(
-        error.response?.data?.message ||
-          "Erro ao criar a despesa. Verifique os campos e tente novamente."
-      );
+
+      toast.success( "Despesa criada com sucesso!" );
+      setOpen( false );
+
+      const start = new Date( data.startDate );
+      const year = String( start.getFullYear() );
+      const month = String( start.getMonth() + 1 ).padStart( 2, "0" );
+
+      onCreate?.( { year, month } );
+    } catch ( error ) {
+      console.error( "Erro ao criar despesa:", error );
+      toast.error( error instanceof Error ? error.message : "Erro ao criar a despesa." );
     }
   }
 
@@ -167,14 +175,14 @@ export function Modal({ onCreate }: ModalProps) {
                   <Form {...form}>
                     <form
                       id="dialog-form"
-                      onSubmit={form.handleSubmit(onSubmit)}
+                      onSubmit={form.handleSubmit( onSubmit )}
                       className="space-y-6"
                     >
                       {/* Title */}
                       <FormField
                         control={form.control}
                         name="name"
-                        render={({ field }) => (
+                        render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
                               <FormLabel className="mr-1">Título</FormLabel>
@@ -192,7 +200,7 @@ export function Modal({ onCreate }: ModalProps) {
                                     side="right"
                                     className="max-w-72"
                                   >
-                                    {getDescription("title")}
+                                    {getDescription( "title" )}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -212,7 +220,7 @@ export function Modal({ onCreate }: ModalProps) {
                       <FormField
                         control={form.control}
                         name="description"
-                        render={({ field }) => (
+                        render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
                               <FormLabel className="mr-1">Descrição</FormLabel>
@@ -230,7 +238,7 @@ export function Modal({ onCreate }: ModalProps) {
                                     side="right"
                                     className="max-w-72"
                                   >
-                                    {getDescription("description")}
+                                    {getDescription( "description" )}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -249,7 +257,7 @@ export function Modal({ onCreate }: ModalProps) {
                       <FormField
                         control={form.control}
                         name="category"
-                        render={({ field }) => (
+                        render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
                               <FormLabel className="mr-1">Categoria</FormLabel>
@@ -267,7 +275,7 @@ export function Modal({ onCreate }: ModalProps) {
                                     side="right"
                                     className="max-w-72"
                                   >
-                                    {getDescription("category")}
+                                    {getDescription( "category" )}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -289,7 +297,7 @@ export function Modal({ onCreate }: ModalProps) {
                       <FormField
                         control={form.control}
                         name="dueDay"
-                        render={({ field }) => (
+                        render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
                               <FormLabel className="mr-1">
@@ -309,20 +317,20 @@ export function Modal({ onCreate }: ModalProps) {
                                     side="right"
                                     className="max-w-72"
                                   >
-                                    {getDescription("dueDay")}
+                                    {getDescription( "dueDay" )}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
                             </div>
                             <FormControl>
                               <SearchableSelect
-                                value={String(field.value)}
-                                onChange={(val) => field.onChange(Number(val))}
+                                value={String( field.value )}
+                                onChange={( val ) => field.onChange( Number( val ) )}
                                 placeholder="Selecione o dia"
-                                options={Array.from({ length: 31 }, (_, i) => ({
-                                  value: String(i + 1),
-                                  label: String(i + 1),
-                                }))}
+                                options={Array.from( { length: 31 }, ( _, i ) => ( {
+                                  value: String( i + 1 ),
+                                  label: String( i + 1 ),
+                                } ) )}
                               />
                             </FormControl>
                             <FormMessage />
@@ -334,10 +342,10 @@ export function Modal({ onCreate }: ModalProps) {
                       <FormField
                         control={form.control}
                         name="startDate"
-                        render={({ field }) => {
+                        render={( { field } ) => {
                           const id = useId();
                           const date = field.value
-                            ? new Date(field.value)
+                            ? new Date( field.value )
                             : undefined;
 
                           return (
@@ -360,7 +368,7 @@ export function Modal({ onCreate }: ModalProps) {
                                       side="right"
                                       className="max-w-72"
                                     >
-                                      {getDescription("startDate")}
+                                      {getDescription( "startDate" )}
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -383,9 +391,9 @@ export function Modal({ onCreate }: ModalProps) {
                                         )}
                                       >
                                         {date
-                                          ? format(date, "PPP", {
-                                              locale: ptBR,
-                                            })
+                                          ? format( date, "PPP", {
+                                            locale: ptBR,
+                                          } )
                                           : "Selecione uma data"}
                                       </span>
                                       <CalendarIcon
@@ -402,8 +410,8 @@ export function Modal({ onCreate }: ModalProps) {
                                     <Calendar
                                       mode="single"
                                       selected={date}
-                                      onSelect={(selected) => {
-                                        if (selected) {
+                                      onSelect={( selected ) => {
+                                        if ( selected ) {
                                           field.onChange(
                                             selected.toISOString()
                                           ); // salva no formato string
@@ -424,7 +432,7 @@ export function Modal({ onCreate }: ModalProps) {
                       <FormField
                         control={form.control}
                         name="amount"
-                        render={({ field }) => (
+                        render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
                               <FormLabel className="mr-1">
@@ -444,7 +452,7 @@ export function Modal({ onCreate }: ModalProps) {
                                     side="right"
                                     className="max-w-72"
                                   >
-                                    {getDescription("defaultValue")}
+                                    {getDescription( "defaultValue" )}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -452,7 +460,7 @@ export function Modal({ onCreate }: ModalProps) {
                             <FormControl>
                               <NumberField
                                 value={field.value}
-                                onChange={(value) => field.onChange(value)}
+                                onChange={( value ) => field.onChange( value )}
                                 formatOptions={{
                                   style: "currency",
                                   currency: "BRL",
@@ -494,7 +502,7 @@ export function Modal({ onCreate }: ModalProps) {
                       <FormField
                         control={form.control}
                         name="paymentStatus"
-                        render={({ field }) => (
+                        render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
                               <FormLabel className="mr-1">
@@ -514,7 +522,7 @@ export function Modal({ onCreate }: ModalProps) {
                                     side="right"
                                     className="max-w-72"
                                   >
-                                    {getDescription("paymentStatus")}
+                                    {getDescription( "paymentStatus" )}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
