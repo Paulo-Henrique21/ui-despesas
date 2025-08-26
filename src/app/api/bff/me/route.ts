@@ -2,8 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const SLEEP_MS = 1000;         // 1s entre tentativas
-const MAX_WAIT_MS = 15000;     // espera total ~15s para "acordar" a API
-const TIMEOUT_MS = 12000;      // timeout de cada request
+const MAX_WAIT_MS = 60000;     // espera total ~60s para "acordar" a API
+const TIMEOUT_MS = 15000;      // timeout de cada request
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
