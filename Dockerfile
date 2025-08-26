@@ -1,31 +1,24 @@
-# Dockerfile para o Frontend Next.js
-FROM node:18-alpine
+# --- Next.js (SSR) com pnpm ---
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copiar package.json e pnpm-lock.yaml
+# pnpm + deps
 COPY package.json pnpm-lock.yaml ./
-
-# Instalar pnpm e dependências
-RUN npm install -g pnpm
+# use corepack para garantir a versão do pnpm
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 RUN pnpm install --frozen-lockfile
 
-# Copiar o código fonte
+# código e build
 COPY . .
-
-# Build da aplicação
 RUN pnpm build
 
-# Criar usuário não-root
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
+# runtime
+ENV NODE_ENV=production
+# Render injeta PORT, mas definir padrão ajuda localmente
+ENV PORT=3000
+# importante para escutar na interface certa
+ENV HOSTNAME=0.0.0.0
 
-# Definir permissões
-RUN chown -R nextjs:nodejs /app
-USER nextjs
-
-# Expor a porta
 EXPOSE 3000
-
-# Comando para iniciar a aplicação
-CMD ["pnpm", "start"]
+CMD ["pnpm", "start"]  # start -> next start (usa PORT/HOSTNAME)
