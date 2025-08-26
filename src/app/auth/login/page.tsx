@@ -53,7 +53,7 @@ export default function Login() {
   async function onSubmit( data: z.infer<typeof FormSchema> ) {
     try {
 
-      const response = await fetch( `/api/bff/login`, {
+      const response = await fetch( `/api/bff/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
