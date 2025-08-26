@@ -52,17 +52,12 @@ export default function Login() {
   const router = useRouter();
   async function onSubmit( data: z.infer<typeof FormSchema> ) {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch( `${ apiUrl }/api/users/login`, {
+
+      const response = await fetch( `/api/bff/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // IMPORTANTE: permite que o cookie HTTP-only venha da resposta
-        body: JSON.stringify( {
-          email: data.email,
-          password: data.password,
-        } ),
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify( { email: data.email, password: data.password } ),
       } );
 
       const responseUser = await response.json();
