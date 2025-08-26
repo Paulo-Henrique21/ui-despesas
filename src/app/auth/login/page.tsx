@@ -25,6 +25,7 @@ import {
 import { toast } from "sonner";
 import { ContainerCenter } from "@/components/customized/container-center";
 import { useUser } from "@/hooks/user-context";
+import { apiFetch } from "@/lib/apiFetch";
 
 const FormSchema = z.object( {
   email: z.string().email( "Please enter a valid email." ),
@@ -53,7 +54,7 @@ export default function Login() {
   async function onSubmit( data: z.infer<typeof FormSchema> ) {
     try {
 
-      const response = await fetch( `/api/bff/users/login`, {
+      const response = await apiFetch( `/api/bff/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

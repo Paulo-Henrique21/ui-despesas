@@ -60,6 +60,7 @@ import axios from "axios";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { categories } from "../constants";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface EditModalProps {
   expense: {
@@ -207,7 +208,7 @@ export function EditModal( {
 
   async function onSubmit( data: z.infer<ReturnType<typeof getSchema>> ) {
     try {
-      const res = await fetch( `/api/bff/expenses/${ expense.expenseId }/edit`, {
+      const res = await apiFetch( `/api/bff/expenses/${ expense.expenseId }/edit`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         credentials: "include",

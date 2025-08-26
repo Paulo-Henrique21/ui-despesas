@@ -61,6 +61,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "./searchable-select";
 import axios from "axios";
 import { categories, inputDescriptions } from "../constants";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface ModalProps {
   onCreate?: ( info: { year: string; month: string } ) => void;
@@ -112,7 +113,7 @@ export function Modal( { onCreate }: ModalProps ) {
 
   async function onSubmit( data: z.infer<typeof FormSchema> ) {
     try {
-      const res = await fetch( `/api/bff/expenses`, {
+      const res = await apiFetch( `/api/bff/expenses`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
