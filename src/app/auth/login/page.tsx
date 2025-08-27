@@ -53,8 +53,7 @@ export default function Login() {
   const router = useRouter();
   async function onSubmit( data: z.infer<typeof FormSchema> ) {
     try {
-
-      const response = await apiFetch( `/api/bff/users/login`, {
+      const response = await fetch( `/api/bff/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -62,21 +61,28 @@ export default function Login() {
       } );
 
       const responseUser = await response.json();
-      console.log( responseUser );
 
       if ( response.ok && responseUser ) {
-        loginUser( responseUser.user )
+        // atualiza contexto
+        loginUser( responseUser.user );
         toast.success( "Login realizado com sucesso!" );
+
+        // 🔥 PRÉ-AQUECER A API (não precisa aguardar)
+        void fetch( "/api/bff/health?wait=0", { cache: "no-store" } ).catch( () => { } );
+
+        // navega pra área privada (o ApiReadyGate vai segurar a tela
+        // até a API estiver pronta, caso ainda esteja acordando)
         router.push( "/private" );
-      } else {
-        toast.error( responseUser.message || "Falha no login." );
+        return;
       }
-    } catch ( error ) {
-      console.error( "Error during login:", error );
+
+      toast.error( responseUser.message || "Falha no login." );
+    } catch ( err ) {
+      console.error( "Error during login:", err );
       toast.error( "Login failed. Please try again." );
-      return;
     }
   }
+
 
   return (
     <ContainerCenter>
