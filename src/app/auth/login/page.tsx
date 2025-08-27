@@ -258,43 +258,35 @@ export default function Login() {
     setIsPasswordVisible((prev) => !prev);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    try {
-      setSubmitting(true);
-      setWaking(true);
+  try {
+    const resp = await fetch("/api/bff/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email: data.email, password: data.password }),
+    });
 
-      // 1) acorda a API antes do login (aparece o overlay enquanto isso)
-      await wakeApi({ maxMs: 15000, stepMs: 1500 });
+    const payload = await resp.json().catch(() => ({} as any));
 
-      // 2) login via BFF
-      const response = await fetch(`/api/bff/users/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email: data.email, password: data.password }),
-      });
-
-      const responseUser = await response.json();
-
-      if (response.ok && responseUser) {
-        loginUser(responseUser.user);
-        toast.success("Login realizado com sucesso!");
-
-        // pré-aquecer em paralelo (não bloqueia a navegação)
-        void fetch("/api/bff/health?wait=0", { cache: "no-store" }).catch(() => {});
-
-        router.push("/private"); // ApiReadyGate cuida de segurar a tela se a API ainda estiver acordando
-        return;
-      }
-
-      toast.error(responseUser?.message || "Falha no login.");
-    } catch (err) {
-      console.error("Error during login:", err);
-      toast.error("Login failed. Please try again.");
-    } finally {
-      setWaking(false);
-      setSubmitting(false);
+    if (resp.ok && payload?.user) {
+      loginUser(payload.user);
+      toast.success("Login realizado com sucesso!");
+      router.push("/private");
+      return;
     }
+
+    if (resp.status === 502) {
+      toast.error("API indisponível no momento. Tente novamente em alguns segundos.");
+      return;
+    }
+
+    toast.error(payload?.message || "Falha no login.");
+  } catch (e) {
+    console.error("Login error:", e);
+    toast.error("Erro de rede. Tente novamente.");
   }
+}
+
 
   return (
     <ContainerCenter>

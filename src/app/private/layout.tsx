@@ -1,5 +1,4 @@
 import { AppSidebar } from "@/components/app-sidebar";
-import ApiReadyGate from "@/components/customized/api-ready-gate";
 import { ModeToggle } from "@/components/customized/mode-toggle";
 import {
   SidebarInset,
@@ -35,9 +34,7 @@ export default function Layout( { children }: { children: React.ReactNode } ) {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
-          
-          {/* {children} */}
-          <ApiReadyGate>{children}</ApiReadyGate>
+          {children}
         </div>
       </SidebarInset>
     </SidebarProvider>
