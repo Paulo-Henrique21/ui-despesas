@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 
 import { Providers } from "@/components/customized/providers";
 import { Toaster } from "@/components/ui/sonner";
+import { GlobalApiGate } from "@/components/customized/global-api-gate";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,7 +30,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${geistMono.variable} antialiased`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {/* {children} */}
+          <GlobalApiGate>{children}</GlobalApiGate>
+          </Providers>
         <Toaster />
       </body>
     </html>
