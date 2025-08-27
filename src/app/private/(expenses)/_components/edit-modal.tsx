@@ -190,7 +190,7 @@ export function EditModal( {
         paymentStatus: expense.paymentStatus,
       } );
     }
-  }, [ open, expense ] );
+  }, [ open, expense, form ] );
 
   useEffect( () => {
     // sempre que mudar o escopo dentro do modal, resetar os campos permitidos
@@ -204,7 +204,7 @@ export function EditModal( {
       paymentStatus:
         expense.paymentStatus === "due" ? "unpaid" : expense.paymentStatus,
     } );
-  }, [ scopeState ] );
+  }, [ scopeState, expense, form ] );
 
   async function onSubmit( data: z.infer<ReturnType<typeof getSchema>> ) {
     try {

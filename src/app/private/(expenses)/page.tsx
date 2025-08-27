@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Modal } from "./_components/modal";
 import { LoadingSkeleton } from "./_components/loading-skeleton";
@@ -36,16 +37,16 @@ export default function DespesasPage() {
     fetchData,
   } = useExpensesData();
 
-  const handleCreate = ( { year, month }: { year: string; month: string } ) => {
+  const handleCreate = useCallback( ( { year, month }: { year: string; month: string } ) => {
     setHasAnyBase( true );
     setSelectedYear( year );
     setSelectedMonth( month );
     fetchData( year, month );
-  };
+  }, [ setHasAnyBase, setSelectedYear, setSelectedMonth, fetchData ] );
 
-  const handleEditSuccess = () => {
+  const handleEditSuccess = useCallback( () => {
     fetchData( selectedYear, selectedMonth );
-  };
+  }, [ fetchData, selectedYear, selectedMonth ] );
 
   if ( initialLoading ) {
     return (

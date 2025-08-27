@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   ReactNode,
 } from "react";
 import { createApiUrl } from "@/lib/api";
@@ -36,47 +37,58 @@ export function UserProvider( { children }: { children: ReactNode } ) {
   const [ loading, setLoading ] = useState( true );
   const [ isLoggingOut, setIsLoggingOut ] = useState( false );
 
-  const loginUser = ( userData: User ) => {
+  const loginUser = useCallback( ( userData: User ) => {
     setUser( userData );
-  };
+  }, [] );
 
-  const logoutUser = () => {
+  const logoutUser = useCallback( () => {
     setIsLoggingOut( true );
     setUser( null );
-  };
+    setLoading( false ); // Para que não fique carregando após logout
+  }, [] );
 
   useEffect( () => {
-    async function fetchUserProfile() {
+    let mounted = true;
+
+    ( async () => {
       try {
-        const res = await fetch(`/api/bff/me`, { method: "GET", credentials: "include", cache: "no-store" })
+        const res = await fetch( "/api/bff/me", {
+          credentials: "include",
+          cache: "no-store",
+        } );
+        if ( !mounted ) return;
 
-        const data = await res.json();
-
-        if ( res.ok ) {
-          setUser( data.user );
-        } else {
+        if ( res.status === 200 ) {
+          const data = await res.json().catch( () => ( {} ) );
+          setUser( data.user ?? null );
+        } else if ( res.status === 401 ) {
+          // só redireciona quando de fato NÃO está autenticado
           setUser( null );
-          // Se estivermos em uma rota privada e não conseguirmos carregar o perfil,
-          // redireciona para login
-          if ( typeof window !== 'undefined' && window.location.pathname.startsWith( '/private' ) ) {
-            window.location.href = '/auth/login';
+          if (
+            typeof window !== "undefined" &&
+            window.location.pathname.startsWith( "/private" )
+          ) {
+            window.location.replace( "/auth/login" );
           }
+        } else {
+          // 404/5xx/timeouts: não redireciona para não criar loop
+          console.warn( "Profile check failed:", res.status );
+          setUser( null );
         }
-      } catch ( error ) {
-        console.error( "Erro ao carregar perfil:", error );
+      } catch ( e ) {
+        console.error( "Profile check error:", e );
         setUser( null );
-        // Se estivermos em uma rota privada e houver erro ao carregar o perfil,
-        // redireciona para login
-        if ( typeof window !== 'undefined' && window.location.pathname.startsWith( '/private' ) ) {
-          window.location.href = '/auth/login';
-        }
+        // sem redirect aqui
       } finally {
-        setLoading( false );
+        if ( mounted ) setLoading( false );
       }
-    }
+    } )();
 
-    fetchUserProfile();
+    return () => {
+      mounted = false;
+    };
   }, [] );
+
 
   return (
     <UserContext.Provider value={{ user, loginUser, logoutUser, loading, isLoggingOut }}>

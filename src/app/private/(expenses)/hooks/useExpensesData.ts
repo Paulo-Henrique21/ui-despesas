@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import axios from "axios";
 import { Expense, SortConfig, ChartDataItem, CategoryTotal } from "../types";
@@ -43,7 +43,7 @@ export function useExpensesData() {
   }
 
   // Buscar dados das despesas
-  const fetchData = async (year: string, month: string) => {
+  const fetchData = useCallback(async (year: string, month: string) => {
     setTabLoading(true);
     try {
       const ym = `${year}-${String(month).padStart(2, "0")}`;
@@ -85,10 +85,10 @@ export function useExpensesData() {
         setTabLoading(false);
       }, 400);
     }
-  };
+  }, []);
 
   // Verificar se há despesas base
-  const checkHasBaseExpenses = async () => {
+  const checkHasBaseExpenses = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const res = await fetch(`/api/bff/expenses/has-any`, {
@@ -112,75 +112,81 @@ export function useExpensesData() {
     } finally {
       setInitialLoading(false);
     }
-  };
+  }, []);
 
   // Deletar despesa
-  async function handleDelete(scope: "future" | "all", expense: Expense) {
-    try {
-      const month = expense.dueDate.slice(0, 7);
+  const handleDelete = useCallback(
+    async (scope: "future" | "all", expense: Expense) => {
+      try {
+        const month = expense.dueDate.slice(0, 7);
 
-      await fetch(
-        `/api/bff/expenses/${
-          expense.expenseId
-        }/delete?scope=${encodeURIComponent(scope)}&month=${month}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-          cache: "no-store",
-        }
-      );
+        await fetch(
+          `/api/bff/expenses/${
+            expense.expenseId
+          }/delete?scope=${encodeURIComponent(scope)}&month=${month}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+            cache: "no-store",
+          }
+        );
 
-      toast.success("Despesa deletada com sucesso.");
-      await fetchData(selectedYear, selectedMonth);
-      await checkHasBaseExpenses();
-    } catch (err) {
-      console.error("Erro ao deletar:", err);
-      toast.error("Erro ao deletar a despesa.");
-    }
-  }
+        toast.success("Despesa deletada com sucesso.");
+        await fetchData(selectedYear, selectedMonth);
+        await checkHasBaseExpenses();
+      } catch (err) {
+        console.error("Erro ao deletar:", err);
+        toast.error("Erro ao deletar a despesa.");
+      }
+    },
+    [selectedYear, selectedMonth, fetchData, checkHasBaseExpenses]
+  );
 
   // Toggle pagamento
-  async function handleTogglePayment(
-    expenseId: string,
-    dueDate: string,
-    currentStatus: "paid" | "unpaid" | "due"
-  ) {
-    try {
-      const month = dueDate.slice(0, 7);
-      const toggledStatus = currentStatus === "paid" ? "unpaid" : "paid";
+  const handleTogglePayment = useCallback(
+    async (
+      expenseId: string,
+      dueDate: string,
+      currentStatus: "paid" | "unpaid" | "due"
+    ) => {
+      try {
+        const month = dueDate.slice(0, 7);
+        const toggledStatus = currentStatus === "paid" ? "unpaid" : "paid";
 
-      await fetch(`/api/bff/expenses/${expenseId}/edit`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        credentials: "include",
-        cache: "no-store",
-        body: JSON.stringify({
-          scope: "only",
-          month,
-          updates: { paymentStatus: toggledStatus },
-        }),
-      });
+        await fetch(`/api/bff/expenses/${expenseId}/edit`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          credentials: "include",
+          cache: "no-store",
+          body: JSON.stringify({
+            scope: "only",
+            month,
+            updates: { paymentStatus: toggledStatus },
+          }),
+        });
 
-      const newVisualStatus = getVisualStatus(toggledStatus, dueDate);
+        const newVisualStatus = getVisualStatus(toggledStatus, dueDate);
 
-      setExpenses((prev) =>
-        prev.map((item) =>
-          item.expenseId === expenseId
-            ? { ...item, status: newVisualStatus }
-            : item
-        )
-      );
+        setExpenses((prev) =>
+          prev.map((item) =>
+            item.expenseId === expenseId
+              ? { ...item, status: newVisualStatus }
+              : item
+          )
+        );
 
-      toast.success(
-        newVisualStatus === "paid"
-          ? "Despesa marcada como paga!"
-          : "Pagamento desfeito com sucesso!"
-      );
-    } catch (error: any) {
-      console.error("Erro ao alterar status de pagamento:", error);
-      toast.error("Erro ao alterar o status da despesa.");
-    }
-  }
+        toast.success(
+          newVisualStatus === "paid"
+            ? "Despesa marcada como paga!"
+            : "Pagamento desfeito com sucesso!"
+        );
+      } catch (error: any) {
+        console.error("Erro ao alterar status de pagamento:", error);
+        toast.error("Erro ao alterar o status da despesa.");
+      }
+    },
+    []
+  );
 
   // Calcular dados derivados
   const sortedExpenses = [...expenses].sort((a, b) => {
@@ -242,13 +248,13 @@ export function useExpensesData() {
 
   useEffect(() => {
     checkHasBaseExpenses();
-  }, []);
+  }, [checkHasBaseExpenses]);
 
   useEffect(() => {
     if (hasAnyBase) {
       fetchData(selectedYear, selectedMonth);
     }
-  }, [hasAnyBase, selectedYear, selectedMonth]);
+  }, [hasAnyBase, selectedYear, selectedMonth, fetchData]);
 
   return {
     // Estado

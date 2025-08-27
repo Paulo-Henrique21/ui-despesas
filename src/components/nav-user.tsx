@@ -42,12 +42,24 @@ export function NavUser() {
     setIsProcessingLogout( true );
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      await fetch( `${ apiUrl }/api/users/logout`, {
+      // Usa o BFF em vez de chamar a API diretamente
+      await fetch( "/api/bff/users/logout", {
         method: "POST",
         credentials: "include",
+        cache: "no-store",
       } );
+
+      // Limpa o estado do contexto do usuário
       logoutUser();
+
+      // Limpa qualquer cache do navegador
+      if ( 'caches' in window ) {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map( cacheName => caches.delete( cacheName ) )
+        );
+      }
+
       // Força uma navegação completa (não client-side routing) para garantir que o middleware seja executado
       window.location.href = "/auth/login";
     } catch ( error ) {
@@ -55,6 +67,8 @@ export function NavUser() {
       // Mesmo se houver erro na API, ainda redireciona para o login
       logoutUser();
       window.location.href = "/auth/login";
+    } finally {
+      setIsProcessingLogout( false );
     }
   }
 

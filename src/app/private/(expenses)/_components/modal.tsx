@@ -109,7 +109,7 @@ export function Modal( { onCreate }: ModalProps ) {
     if ( open ) {
       form.reset( defaultValues );
     }
-  }, [ open ] );
+  }, [ open, form ] );
 
   async function onSubmit( data: z.infer<typeof FormSchema> ) {
     try {
