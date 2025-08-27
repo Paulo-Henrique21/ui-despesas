@@ -4,7 +4,13 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
 
 function targetUrl(pathname: string, search: string) {
   // troca /api/bff/... -> /api/...
-  const upstreamPath = pathname.replace(/^\/api\/bff\/?/, "/api/");
+  let upstreamPath = pathname.replace(/^\/api\/bff\/?/, "/api/");
+
+  // Casos especiais de mapeamento
+  if (upstreamPath === "/api/me") {
+    upstreamPath = "/api/users/profile";
+  }
+
   const u = new URL(API_BASE);
   u.pathname = upstreamPath;
   u.search = search;
