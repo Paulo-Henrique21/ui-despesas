@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE = process.env.API_BASE!;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
 
 function targetUrl(pathname: string, search: string) {
   // troca /api/bff/... -> /api/...
@@ -13,7 +13,10 @@ function targetUrl(pathname: string, search: string) {
 
 async function handler(req: NextRequest) {
   if (!API_BASE) {
-    return NextResponse.json({ message: "API_BASE not set" }, { status: 500 });
+    return NextResponse.json(
+      { message: "NEXT_PUBLIC_API_URL not set" },
+      { status: 500 }
+    );
   }
 
   const url = targetUrl(req.nextUrl.pathname, req.nextUrl.search);
@@ -25,7 +28,9 @@ async function handler(req: NextRequest) {
     cache: "no-store",
     headers: {
       // só repasse o que importa; evita problemas de decodificação
-      ...(req.headers.get("content-type") ? { "content-type": req.headers.get("content-type")! } : {}),
+      ...(req.headers.get("content-type")
+        ? { "content-type": req.headers.get("content-type")! }
+        : {}),
       ...(cookie ? { cookie } : {}),
     },
   };
@@ -39,7 +44,10 @@ async function handler(req: NextRequest) {
   try {
     upstream = await fetch(url, init);
   } catch {
-    return NextResponse.json({ message: "upstream_unreachable" }, { status: 502 });
+    return NextResponse.json(
+      { message: "upstream_unreachable" },
+      { status: 502 }
+    );
   }
 
   const bytes = new Uint8Array(await upstream.arrayBuffer());
@@ -48,7 +56,9 @@ async function handler(req: NextRequest) {
     status: upstream.status,
     headers: {
       // defina explicitamente; NÃO copie content-encoding/transfer-encoding
-      "content-type": upstream.headers.get("content-type") || "application/json; charset=utf-8",
+      "content-type":
+        upstream.headers.get("content-type") ||
+        "application/json; charset=utf-8",
       "cache-control": "no-store",
     },
   });
@@ -57,7 +67,7 @@ async function handler(req: NextRequest) {
   const setCookie = upstream.headers.get("set-cookie");
   if (setCookie) {
     const rewritten = setCookie
-      .replace(/Domain=[^;]+;?\s*/gi, "")          // remove Domain
+      .replace(/Domain=[^;]+;?\s*/gi, "") // remove Domain
       .replace(/;\s*SameSite=None/gi, "; SameSite=Lax"); // Lax para same-origin
     res.headers.append("set-cookie", rewritten);
   }

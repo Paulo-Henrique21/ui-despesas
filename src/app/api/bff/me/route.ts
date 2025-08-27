@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-const API_BASE = process.env.API_BASE!;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
 
 export async function GET(req: NextRequest) {
   const cookie = req.headers.get("cookie") || "";
@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
       headers: { "cache-control": "no-store" },
     });
   } catch {
-    return NextResponse.json({ message: "upstream_unreachable" }, { status: 502 });
+    return NextResponse.json(
+      { message: "upstream_unreachable" },
+      { status: 502 }
+    );
   }
 }
