@@ -4,6 +4,7 @@ import axios from "axios";
 import { Expense, SortConfig, ChartDataItem, CategoryTotal } from "../types";
 import { predefinedColors } from "../constants";
 import { ChartConfig } from "@/components/ui/chart";
+import { apiFetch } from "@/lib/apiFetch";
 
 export function useExpensesData() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -20,17 +21,36 @@ export function useExpensesData() {
 
   // Função para determinar status visual
   function getVisualStatus(
-    paymentStatus: "paid" | "unpaid" | "due",
+    paymentStatus: "paid" | "unpaid" | "due" | "due_today",
     dueDate: string
-  ): "paid" | "unpaid" | "due" {
+  ): "paid" | "unpaid" | "due" | "due_today" {
     if (paymentStatus === "paid") return "paid";
 
+    // Usar o fuso horário local do Brasil para comparação
     const today = new Date();
-    const due = new Date(dueDate);
-    due.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
+    const todayStr =
+      today.getFullYear() +
+      "-" +
+      String(today.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(today.getDate()).padStart(2, "0");
 
-    return due < today ? "due" : "unpaid";
+    // Extrair apenas a parte da data (YYYY-MM-DD) do dueDate
+    const dueDateStr = dueDate.slice(0, 10);
+
+    console.log("🔍 Date comparison:", {
+      todayStr,
+      dueDateStr,
+      dueDate,
+    });
+
+    // Verifica se vence hoje
+    if (dueDateStr === todayStr) {
+      return "due_today";
+    }
+
+    // Verifica se já venceu (data passada)
+    return dueDateStr < todayStr ? "due" : "unpaid";
   }
 
   // Função para ordenação
@@ -48,7 +68,7 @@ export function useExpensesData() {
     try {
       const ym = `${year}-${String(month).padStart(2, "0")}`;
 
-      const res = await fetch(`/api/bff/expenses/monthly?month=${ym}`, {
+      const res = await apiFetch(`expenses/monthly?month=${ym}`, {
         method: "GET",
         credentials: "include",
         cache: "no-store",
@@ -91,7 +111,7 @@ export function useExpensesData() {
   const checkHasBaseExpenses = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const res = await fetch(`/api/bff/expenses/has-any`, {
+      const res = await apiFetch(`expenses/has-any`, {
         credentials: "include",
       });
 
@@ -120,10 +140,10 @@ export function useExpensesData() {
       try {
         const month = expense.dueDate.slice(0, 7);
 
-        await fetch(
-          `/api/bff/expenses/${
-            expense.expenseId
-          }/delete?scope=${encodeURIComponent(scope)}&month=${month}`,
+        await apiFetch(
+          `expenses/${expense.expenseId}/delete?scope=${encodeURIComponent(
+            scope
+          )}&month=${month}`,
           {
             method: "DELETE",
             credentials: "include",
@@ -147,13 +167,13 @@ export function useExpensesData() {
     async (
       expenseId: string,
       dueDate: string,
-      currentStatus: "paid" | "unpaid" | "due"
+      currentStatus: "paid" | "unpaid" | "due" | "due_today"
     ) => {
       try {
         const month = dueDate.slice(0, 7);
         const toggledStatus = currentStatus === "paid" ? "unpaid" : "paid";
 
-        await fetch(`/api/bff/expenses/${expenseId}/edit`, {
+        await apiFetch(`expenses/${expenseId}/edit`, {
           method: "PATCH",
           headers: { "content-type": "application/json" },
           credentials: "include",

@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, Calendar, DollarSign, CheckCircle } from "lucide-react";
 import { ChartDataItem } from "../types";
+import { formatCurrency } from "@/lib/utils";
 
 interface IndicatorCardsProps {
     categoriaTop: ChartDataItem;
@@ -27,7 +28,7 @@ export function IndicatorCards( {
                         <p className="text-sm text-muted-foreground">Maior Categoria</p>
                         <p className="text-2xl font-bold">{categoriaTop.browser}</p>
                         <p className="text-xs text-muted-foreground truncate">
-                            totalizou R$ {categoriaTop.visitors.toFixed( 0 )}
+                            totalizou {formatCurrency( categoriaTop.visitors )}
                         </p>
                     </div>
                     <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -43,7 +44,7 @@ export function IndicatorCards( {
                         <p className="text-sm text-muted-foreground">Contas Pendentes</p>
                         <p className="text-2xl font-bold">{quantidadeContasNaoPagas}</p>
                         <p className="text-xs text-muted-foreground">
-                            R$ {totalContasNaoPagas.toFixed( 2 )} em aberto
+                            {formatCurrency( totalContasNaoPagas )} em aberto
                         </p>
                     </div>
                     <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
@@ -57,7 +58,7 @@ export function IndicatorCards( {
                 <div className="flex items-start justify-between">
                     <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">Total do mês</p>
-                        <p className="text-2xl font-bold">R$ {totalMes.toFixed( 0 )}</p>
+                        <p className="text-2xl font-bold">{formatCurrency( totalMes )}</p>
                         <p className="text-xs text-muted-foreground">valor total</p>
                     </div>
                     <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">

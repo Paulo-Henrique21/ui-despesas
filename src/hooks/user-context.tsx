@@ -36,19 +36,39 @@ export function UserProvider( { children }: { children: ReactNode } ) {
   const [ user, setUser ] = useState<User | null>( null );
   const [ loading, setLoading ] = useState( true );
   const [ isLoggingOut, setIsLoggingOut ] = useState( false );
+  const [ shouldCheckProfile, setShouldCheckProfile ] = useState( true );
 
   const loginUser = useCallback( ( userData: User ) => {
     setUser( userData );
+    setShouldCheckProfile( true ); // Reabilita verificação após login
   }, [] );
 
   const logoutUser = useCallback( () => {
     setIsLoggingOut( true );
+    setShouldCheckProfile( false ); // Desabilita verificação durante logout
     setUser( null );
     setLoading( false ); // Para que não fique carregando após logout
+
+    // Após um pequeno delay, limpa o estado de logout
+    setTimeout( () => {
+      setIsLoggingOut( false );
+      setShouldCheckProfile( true ); // Reabilita para futuras navegações
+    }, 500 );
   }, [] );
 
   useEffect( () => {
     let mounted = true;
+
+    // Se não devemos verificar o perfil (durante logout), não executa
+    if ( !shouldCheckProfile || isLoggingOut ) {
+      return;
+    }
+
+    // Se estamos em páginas de auth, não faz a verificação
+    if ( typeof window !== "undefined" && window.location.pathname.startsWith( "/auth" ) ) {
+      setLoading( false );
+      return;
+    }
 
     ( async () => {
       try {
@@ -87,7 +107,7 @@ export function UserProvider( { children }: { children: ReactNode } ) {
     return () => {
       mounted = false;
     };
-  }, [] );
+  }, [ shouldCheckProfile, isLoggingOut ] );
 
 
   return (

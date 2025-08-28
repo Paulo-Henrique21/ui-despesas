@@ -21,7 +21,7 @@ export function LoadingSkeleton( { showTabsHeader = false }: LoadingSkeletonProp
                 {[ 1, 2, 3, 4 ].map( ( i ) => (
                     <Card key={i} className="p-6 border rounded-lg shadow-none bg-background">
                         <div className="flex items-start justify-between">
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 <Skeleton className="h-4 w-24" />
                                 <Skeleton className="h-8 w-20" />
                                 <Skeleton className="h-3 w-32" />
@@ -35,19 +35,19 @@ export function LoadingSkeleton( { showTabsHeader = false }: LoadingSkeletonProp
             {/* Skeleton para gráfico e tabela */}
             <div className="space-y-4 xl:space-y-0 xl:grid xl:grid-cols-3 xl:gap-4">
                 {/* Skeleton do gráfico */}
-                <Card className="flex flex-col shadow-none bg-background xl:col-span-1">
+                <Card className="flex flex-col rounded-lg shadow-none bg-background xl:col-span-1">
                     <CardHeader className="items-center pb-0">
                         <Skeleton className="h-6 w-48" />
                         <Skeleton className="h-4 w-20 mt-1" />
                     </CardHeader>
-                    <CardContent className="flex flex-col items-center justify-center gap-4">
+                    <CardContent className="flex flex-col items-center justify-center flex-1 gap-4">
                         <Skeleton className="aspect-square w-full max-w-[250px] xl:max-w-[200px] rounded-full" />
                     </CardContent>
                 </Card>
 
                 {/* Skeleton da tabela */}
                 <div className="xl:col-span-2">
-                    <div className="bg-background rounded-md border flex flex-col h-[397px]">
+                    <div className="bg-background rounded-md border flex flex-col h-[416px]">
                         <div className="overflow-auto flex-1">
                             <div className="min-w-max w-full">
                                 {/* Header da tabela */}
@@ -63,7 +63,7 @@ export function LoadingSkeleton( { showTabsHeader = false }: LoadingSkeletonProp
                                 </div>
                                 {/* Linhas da tabela */}
                                 <div className="divide-y">
-                                    {[ 1, 2, 3, 4, 5, 6 ].map( ( i ) => (
+                                    {[ 1, 2, 3, 4, 5, 6, 7, 8 ].map( ( i ) => (
                                         <div key={i} className="px-4 py-3">
                                             <div className="flex gap-4 items-center">
                                                 <Skeleton className="h-4 w-16" />

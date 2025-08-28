@@ -30,7 +30,7 @@ export function NavigationTabs( {
 }: NavigationTabsProps ) {
     return (
         <div className="flex gap-2 w-full">
-            <ScrollArea className="grid pb-3" type="always">
+            <ScrollArea className="grid pb-2" type="always">
                 <TabsList>
                     {monthList.map( ( month ) => (
                         <TooltipProvider key={month.value}>

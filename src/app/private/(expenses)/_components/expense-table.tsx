@@ -1,3 +1,5 @@
+"use client";
+
 import { ArrowDown, ArrowUp, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,20 +29,41 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EditModal } from "./edit-modal";
 import { Expense, SortConfig } from "../types";
-import { useState } from "react";
+import { useState, CSSProperties } from "react";
+import {
+    Column,
+    ColumnDef,
+    flexRender,
+    getCoreRowModel,
+    getSortedRowModel,
+    SortingState,
+    useReactTable,
+} from "@tanstack/react-table";
 
 interface ExpenseTableProps {
     expenses: Expense[];
     sortConfig: SortConfig | null;
     onSort: ( key: keyof Expense ) => void;
-    onTogglePayment: ( expenseId: string, dueDate: string, currentStatus: "paid" | "unpaid" | "due" ) => void;
+    onTogglePayment: ( expenseId: string, dueDate: string, currentStatus: "paid" | "unpaid" | "due" | "due_today" ) => void;
     onDelete: ( scope: "future" | "all", expense: Expense ) => void;
     onEditSuccess: () => void;
 }
+
+// Helper function to compute pinning styles for columns
+const getPinningStyles = ( column: Column<Expense>, isHeader: boolean = false ): CSSProperties => {
+    const isPinned = column.getIsPinned();
+    return {
+        left: isPinned === "left" ? `${ column.getStart( "left" ) }px` : undefined,
+        right: isPinned === "right" ? `${ column.getAfter( "right" ) }px` : undefined,
+        position: isPinned ? "sticky" : "relative",
+        width: column.getSize(),
+        zIndex: isPinned ? ( isHeader ? 60 : 15 ) : ( isHeader ? 50 : 0 ), // Headers sempre acima das células
+        top: isPinned && isHeader ? "0px" : undefined, // Apenas headers de colunas fixas têm top: 0
+    };
+};
 
 export function ExpenseTable( {
     expenses,
@@ -59,6 +82,8 @@ export function ExpenseTable( {
         expense: null,
         scope: null,
     } );
+
+    const [ sorting, setSorting ] = useState<SortingState>( [] );
 
     const handleDeleteClick = ( scope: "future" | "all", expense: Expense ) => {
         setDeleteDialog( {
@@ -94,228 +119,355 @@ export function ExpenseTable( {
         return "Tem certeza que deseja deletar esta despesa em todos os meses?";
     };
 
-    const getStatusColor = ( status: "paid" | "unpaid" | "due" ) => {
+    const getStatusColor = ( status: "paid" | "unpaid" | "due" | "due_today" ) => {
         switch ( status ) {
             case "paid":
                 return "bg-green-600 text-white hover:bg-green-700";
             case "due":
                 return "bg-red-600 text-white hover:bg-red-700";
+            case "due_today":
+                return "bg-orange-600 text-white hover:bg-orange-700";
             default:
                 return "bg-secondary text-secondary-foreground hover:bg-secondary/80";
         }
     };
 
-    const getStatusText = ( status: "paid" | "unpaid" | "due" ) => {
+    const getStatusText = ( status: "paid" | "unpaid" | "due" | "due_today" ) => {
         switch ( status ) {
             case "paid":
                 return "Pago";
             case "due":
                 return "Vencido";
+            case "due_today":
+                return "Vence hoje";
             default:
                 return "Não pago";
         }
     };
 
+    const columns: ColumnDef<Expense>[] = [
+        {
+            header: "Nome",
+            accessorKey: "name",
+            enableSorting: true,
+            size: 200,
+            cell: ( { row } ) => (
+                <div className="font-medium max-w-[200px] truncate">
+                    {row.getValue( "name" )}
+                </div>
+            ),
+        },
+        {
+            header: "Categoria",
+            accessorKey: "category",
+            enableSorting: true,
+            size: 150,
+            cell: ( { row } ) => (
+                <div className="max-w-[150px] truncate">
+                    {row.getValue( "category" )}
+                </div>
+            ),
+        },
+        {
+            header: "Dia de Vencimento",
+            accessorKey: "dueDay",
+            enableSorting: true,
+            size: 120,
+        },
+        {
+            header: "Valor",
+            accessorKey: "amount",
+            enableSorting: true,
+            size: 120,
+            cell: ( { row } ) => {
+                const amount = parseFloat( row.getValue( "amount" ) );
+                return (
+                    <div className="text-right">
+                        R$ {amount.toFixed( 2 )}
+                    </div>
+                );
+            },
+        },
+        {
+            header: "Status",
+            accessorKey: "status",
+            enableSorting: true,
+            size: 120,
+            cell: ( { row } ) => {
+                const status = row.getValue( "status" ) as "paid" | "unpaid" | "due" | "due_today";
+                return (
+                    <Badge className={getStatusColor( status )}>
+                        {getStatusText( status )}
+                    </Badge>
+                );
+            },
+        },
+        {
+            header: "Ações",
+            accessorKey: "status", // Usar status como base para ordenação
+            id: "actions", // ID específico para identificar a coluna
+            enableSorting: true,
+            enablePinning: false,
+            size: 100,
+            sortingFn: ( rowA, rowB ) => {
+                // Ordenação customizada: paid < unpaid < due_today < due
+                const statusOrder = { "paid": 0, "unpaid": 1, "due_today": 2, "due": 3 };
+                const statusA = rowA.original.status;
+                const statusB = rowB.original.status;
+                return statusOrder[ statusA ] - statusOrder[ statusB ];
+            },
+            cell: ( { row } ) => {
+                const expense = row.original;
+                return (
+                    <Button
+                        variant={expense.status === "paid" ? "secondary" : "outline"}
+                        size="sm"
+                        onClick={() =>
+                            onTogglePayment( expense.expenseId, expense.dueDate, expense.status )
+                        }
+                    >
+                        {expense.status === "paid" ? "Desfazer" : "Pagar"}
+                    </Button>
+                );
+            },
+        },
+        {
+            header: "Opções",
+            accessorKey: "options",
+            enableSorting: false,
+            enablePinning: false,
+            size: 80,
+            cell: ( { row } ) => {
+                const expense = row.original;
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="overflow-y-hidden">
+                            {/* Submenu: Editar */}
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>Editar</DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem asChild>
+                                        <EditModal
+                                            expense={{
+                                                expenseId: expense.expenseId,
+                                                name: expense.name,
+                                                category: expense.category,
+                                                amount: expense.amount,
+                                                dueDay: expense.dueDay,
+                                                startDate: expense.dueDate.slice( 0, 7 ),
+                                                paymentStatus: expense.status,
+                                                description: "",
+                                            }}
+                                            scope="only"
+                                            onSuccess={onEditSuccess}
+                                            nameButton="Este mês"
+                                        />
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <EditModal
+                                            expense={{
+                                                expenseId: expense.expenseId,
+                                                name: expense.name,
+                                                category: expense.category,
+                                                amount: expense.amount,
+                                                dueDay: expense.dueDay,
+                                                startDate: expense.dueDate.slice( 0, 7 ),
+                                                paymentStatus: expense.status,
+                                                description: "",
+                                            }}
+                                            scope="future"
+                                            onSuccess={onEditSuccess}
+                                            nameButton="Este e próximos"
+                                        />
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <EditModal
+                                            expense={{
+                                                expenseId: expense.expenseId,
+                                                name: expense.name,
+                                                category: expense.category,
+                                                amount: expense.amount,
+                                                dueDay: expense.dueDay,
+                                                startDate: expense.dueDate.slice( 0, 7 ),
+                                                paymentStatus: expense.status,
+                                                description: "",
+                                            }}
+                                            scope="all"
+                                            onSuccess={onEditSuccess}
+                                            nameButton="Todos os meses"
+                                        />
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+
+                            {/* Submenu: Deletar */}
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>Deletar</DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem
+                                        onClick={() => handleDeleteClick( "future", expense )}
+                                    >
+                                        Este mês e os próximos
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() => handleDeleteClick( "all", expense )}
+                                    >
+                                        Todos os meses
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                );
+            },
+        },
+    ];
+
+    const table = useReactTable( {
+        data: expenses,
+        columns,
+        columnResizeMode: "onChange",
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        onSortingChange: setSorting,
+        state: {
+            sorting,
+            columnPinning: {
+                right: [ "options" ], // Apenas Opções fixo na direita
+            },
+        },
+        enableSortingRemoval: false,
+        initialState: {
+            columnPinning: {
+                right: [ "options" ],
+            },
+        },
+    } );
+
     return (
         <div className="xl:col-span-2">
-            <div className="bg-background rounded-md border flex flex-col h-[397px]">
-                <div className="overflow-auto flex-1">
-                    <Table className="min-w-max w-full">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead
-                                    onClick={() => onSort( "name" )}
-                                    className="cursor-pointer select-none"
-                                >
-                                    <div className="flex items-center gap-1">
-                                        Nome
-                                        {sortConfig?.key === "name" &&
-                                            ( sortConfig.direction === "asc" ? (
-                                                <ArrowUp className="w-4 h-4" />
-                                            ) : (
-                                                <ArrowDown className="w-4 h-4" />
-                                            ) )}
-                                    </div>
-                                </TableHead>
-                                <TableHead
-                                    onClick={() => onSort( "category" )}
-                                    className="cursor-pointer select-none"
-                                >
-                                    <div className="flex items-center gap-1">
-                                        Categoria
-                                        {sortConfig?.key === "category" &&
-                                            ( sortConfig.direction === "asc" ? (
-                                                <ArrowUp className="w-4 h-4" />
-                                            ) : (
-                                                <ArrowDown className="w-4 h-4" />
-                                            ) )}
-                                    </div>
-                                </TableHead>
-                                <TableHead
-                                    onClick={() => onSort( "dueDay" )}
-                                    className="cursor-pointer select-none"
-                                >
-                                    <div className="flex items-center gap-1">
-                                        Dia
-                                        {sortConfig?.key === "dueDay" &&
-                                            ( sortConfig.direction === "asc" ? (
-                                                <ArrowUp className="w-4 h-4" />
-                                            ) : (
-                                                <ArrowDown className="w-4 h-4" />
-                                            ) )}
-                                    </div>
-                                </TableHead>
-                                <TableHead
-                                    onClick={() => onSort( "amount" )}
-                                    className="cursor-pointer select-none text-right"
-                                >
-                                    <div className="flex items-center gap-1 justify-end">
-                                        Valor
-                                        {sortConfig?.key === "amount" &&
-                                            ( sortConfig.direction === "asc" ? (
-                                                <ArrowUp className="w-4 h-4" />
-                                            ) : (
-                                                <ArrowDown className="w-4 h-4" />
-                                            ) )}
-                                    </div>
-                                </TableHead>
-                                <TableHead
-                                    onClick={() => onSort( "status" )}
-                                    className="cursor-pointer select-none"
-                                >
-                                    <div className="flex items-center gap-1">
-                                        Status
-                                        {sortConfig?.key === "status" &&
-                                            ( sortConfig.direction === "asc" ? (
-                                                <ArrowUp className="w-4 h-4" />
-                                            ) : (
-                                                <ArrowDown className="w-4 h-4" />
-                                            ) )}
-                                    </div>
-                                </TableHead>
-                                <TableHead>Ações</TableHead>
-                                <TableHead className="text-right">Opções</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {expenses.map( ( expense ) => (
-                                <TableRow key={expense.expenseId}>
-                                    <TableCell className="font-medium max-w-[220px] truncate">
-                                        {expense.name}
-                                    </TableCell>
-                                    <TableCell className="max-w-[220px] truncate">
-                                        {expense.category}
-                                    </TableCell>
-                                    <TableCell>{expense.dueDay}</TableCell>
-                                    <TableCell className="text-right">
-                                        R$ {expense.amount.toFixed( 2 )}
-                                    </TableCell>
-                                    <TableCell className="max-w-[220px] truncate">
-                                        <Badge className={getStatusColor( expense.status )}>
-                                            {getStatusText( expense.status )}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="max-w-[220px] truncate">
-                                        <Button
-                                            variant={expense.status === "paid" ? "secondary" : "outline"}
-                                            size="sm"
-                                            onClick={() =>
-                                                onTogglePayment( expense.expenseId, expense.dueDate, expense.status )
-                                            }
-                                        >
-                                            {expense.status === "paid" ? "Desfazer" : "Pagar"}
-                                        </Button>
-                                    </TableCell>
-                                    <TableCell className="text-right max-w-[220px] truncate">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="outline" size="icon">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="overflow-y-hidden">
-                                                {/* Submenu: Editar */}
-                                                <DropdownMenuSub>
-                                                    <DropdownMenuSubTrigger>Editar</DropdownMenuSubTrigger>
-                                                    <DropdownMenuSubContent>
-                                                        <DropdownMenuItem asChild>
-                                                            <EditModal
-                                                                expense={{
-                                                                    expenseId: expense.expenseId,
-                                                                    name: expense.name,
-                                                                    category: expense.category,
-                                                                    amount: expense.amount,
-                                                                    dueDay: expense.dueDay,
-                                                                    startDate: expense.dueDate,
-                                                                    paymentStatus: expense.status,
-                                                                    description: "",
-                                                                }}
-                                                                scope="only"
-                                                                onSuccess={onEditSuccess}
-                                                                nameButton="Este mês"
-                                                            />
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem asChild>
-                                                            <EditModal
-                                                                expense={{
-                                                                    expenseId: expense.expenseId,
-                                                                    name: expense.name,
-                                                                    category: expense.category,
-                                                                    amount: expense.amount,
-                                                                    dueDay: expense.dueDay,
-                                                                    startDate: expense.dueDate,
-                                                                    paymentStatus: expense.status,
-                                                                    description: "",
-                                                                }}
-                                                                scope="future"
-                                                                onSuccess={onEditSuccess}
-                                                                nameButton="Este e próximos"
-                                                            />
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem asChild>
-                                                            <EditModal
-                                                                expense={{
-                                                                    expenseId: expense.expenseId,
-                                                                    name: expense.name,
-                                                                    category: expense.category,
-                                                                    amount: expense.amount,
-                                                                    dueDay: expense.dueDay,
-                                                                    startDate: expense.dueDate,
-                                                                    paymentStatus: expense.status,
-                                                                    description: "",
-                                                                }}
-                                                                scope="all"
-                                                                onSuccess={onEditSuccess}
-                                                                nameButton="Todos os meses"
-                                                            />
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuSubContent>
-                                                </DropdownMenuSub>
+            <div className="bg-background rounded-md border flex flex-col h-[416px] overflow-hidden">
+                <Table
+                    className="[&_td]:border-border [&_th]:border-border table-fixed border-separate border-spacing-0 [&_tfoot_td]:border-t [&_th]:border-b [&_tr]:border-none [&_tr:not(:last-child)_td]:border-b flex-1"
+                    style={{
+                        width: table.getTotalSize(),
+                    }}
+                >
+                    <TableHeader>
+                        {table.getHeaderGroups().map( ( headerGroup ) => (
+                            <TableRow key={headerGroup.id} className="bg-muted/50 hover:bg-muted/50">
+                                {headerGroup.headers.map( ( header ) => {
+                                    const { column } = header;
+                                    const isPinned = column.getIsPinned();
+                                    const isLastLeftPinned =
+                                        isPinned === "left" && column.getIsLastColumn( "left" );
+                                    const isFirstRightPinned =
+                                        isPinned === "right" && column.getIsFirstColumn( "right" );
 
-                                                {/* Submenu: Deletar */}
-                                                <DropdownMenuSub>
-                                                    <DropdownMenuSubTrigger>Deletar</DropdownMenuSubTrigger>
-                                                    <DropdownMenuSubContent>
-                                                        <DropdownMenuItem
-                                                            onClick={() => handleDeleteClick( "future", expense )}
-                                                        >
-                                                            Este mês e os próximos
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            onClick={() => handleDeleteClick( "all", expense )}
-                                                        >
-                                                            Todos os meses
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuSubContent>
-                                                </DropdownMenuSub>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
+                                    return (
+                                        <TableHead
+                                            key={header.id}
+                                            className="[&[data-pinned][data-last-col]]:border-border data-pinned:bg-muted/50 relative h-10 truncate border-t data-pinned:backdrop-blur-xs [&:not([data-pinned]):has(+[data-pinned])_div.cursor-col-resize:last-child]:opacity-0 [&[data-last-col=left]_div.cursor-col-resize:last-child]:opacity-0 [&[data-pinned=left][data-last-col=left]]:border-r [&[data-pinned=right]:last-child_div.cursor-col-resize:last-child]:opacity-0 [&[data-pinned=right][data-last-col=right]]:border-l cursor-pointer select-none bg-muted/50"
+                                            colSpan={header.colSpan}
+                                            style={{ ...getPinningStyles( column, true ) }}
+                                            data-pinned={isPinned || undefined}
+                                            data-last-col={
+                                                isLastLeftPinned
+                                                    ? "left"
+                                                    : isFirstRightPinned
+                                                        ? "right"
+                                                        : undefined
+                                            }
+                                            onClick={column.getToggleSortingHandler()}
+                                        >
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="truncate">
+                                                        {header.isPlaceholder
+                                                            ? null
+                                                            : flexRender(
+                                                                header.column.columnDef.header,
+                                                                header.getContext()
+                                                            )}
+                                                    </span>
+                                                    {column.getIsSorted() === "asc" && (
+                                                        <ArrowUp className="w-4 h-4" />
+                                                    )}
+                                                    {column.getIsSorted() === "desc" && (
+                                                        <ArrowDown className="w-4 h-4" />
+                                                    )}
+                                                </div>
+
+                                                {header.column.getCanResize() && (
+                                                    <div
+                                                        {...{
+                                                            onDoubleClick: () => header.column.resetSize(),
+                                                            onMouseDown: header.getResizeHandler(),
+                                                            onTouchStart: header.getResizeHandler(),
+                                                            className:
+                                                                "absolute top-0 h-full w-4 cursor-col-resize user-select-none touch-none -right-2 z-10 flex justify-center before:absolute before:w-px before:inset-y-0 before:bg-border before:-translate-x-px",
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
+                                        </TableHead>
+                                    );
+                                } )}
+                            </TableRow>
+                        ) )}
+                    </TableHeader>
+                    <TableBody>
+                        {table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map( ( row ) => (
+                                <TableRow
+                                    key={row.id}
+                                    data-state={row.getIsSelected() && "selected"}
+                                >
+                                    {row.getVisibleCells().map( ( cell ) => {
+                                        const { column } = cell;
+                                        const isPinned = column.getIsPinned();
+                                        const isLastLeftPinned =
+                                            isPinned === "left" && column.getIsLastColumn( "left" );
+                                        const isFirstRightPinned =
+                                            isPinned === "right" && column.getIsFirstColumn( "right" );
+
+                                        return (
+                                            <TableCell
+                                                key={cell.id}
+                                                className={`[&[data-pinned][data-last-col]]:border-border data-pinned:bg-background data-pinned:backdrop-blur-xs [&[data-pinned=left][data-last-col=left]]:border-r [&[data-pinned=right][data-last-col=right]]:border-l ${ column.id === 'actions' || column.id === 'options' ? '' : 'truncate' }`}
+                                                style={{ ...getPinningStyles( column, false ) }}
+                                                data-pinned={isPinned || undefined}
+                                                data-last-col={
+                                                    isLastLeftPinned
+                                                        ? "left"
+                                                        : isFirstRightPinned
+                                                            ? "right"
+                                                            : undefined
+                                                }
+                                            >
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </TableCell>
+                                        );
+                                    } )}
                                 </TableRow>
-                            ) )}
-                        </TableBody>
-                    </Table>
-                </div>
+                            ) )
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                    Nenhuma despesa encontrada.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </div>
 
             <AlertDialog open={deleteDialog.isOpen} onOpenChange={handleDeleteCancel}>

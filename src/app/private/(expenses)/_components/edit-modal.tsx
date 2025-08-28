@@ -208,14 +208,38 @@ export function EditModal( {
 
   async function onSubmit( data: z.infer<ReturnType<typeof getSchema>> ) {
     try {
-      const res = await apiFetch( `/api/bff/expenses/${ expense.expenseId }/edit`, {
+      // Garantir que o mês está no formato correto YYYY-MM
+      let month: string;
+
+      if ( data.startDate ) {
+        // Se startDate é uma string de data completa (ex: "2024-08-15")
+        if ( data.startDate.includes( '-' ) && data.startDate.length >= 7 ) {
+          month = data.startDate.slice( 0, 7 ); // "2024-08-15" -> "2024-08"
+        } else {
+          // Se for apenas o ano-mês
+          month = data.startDate;
+        }
+      } else {
+        // Fallback para o mês atual se não houver startDate
+        const now = new Date();
+        month = `${ now.getFullYear() }-${ String( now.getMonth() + 1 ).padStart( 2, '0' ) }`;
+      }
+
+      console.log( 'EditModal - Enviando dados:', {
+        scope: scopeState,
+        month,
+        updates: data,
+        originalStartDate: data.startDate
+      } );
+
+      const res = await apiFetch( `expenses/${ expense.expenseId }/edit`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         credentials: "include",
         cache: "no-store",
         body: JSON.stringify( {
           scope: scopeState,
-          month: data.startDate.slice( 0, 7 ),
+          month,
           updates: data,
         } ),
       } );

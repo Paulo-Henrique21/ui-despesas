@@ -72,7 +72,7 @@ export function NavUser() {
     }
   }
 
-  if ( loading || isLoggingOut ) {
+  if ( loading && !isLoggingOut ) {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
@@ -88,14 +88,9 @@ export function NavUser() {
     );
   }
 
-  if ( !user ) {
-    return (
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <div className="p-2 text-sm">Usuário não autenticado</div>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    );
+  // Durante o logout ou se não há usuário, não renderiza nada
+  if ( isLoggingOut || !user ) {
+    return null;
   }
 
   return (

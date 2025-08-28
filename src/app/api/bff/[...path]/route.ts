@@ -14,10 +14,25 @@ function targetUrl(pathname: string, search: string) {
   const u = new URL(API_BASE);
   u.pathname = upstreamPath;
   u.search = search;
+
+  // Debug log
+  console.log("🔍 BFF URL Mapping:", {
+    originalPath: pathname,
+    upstreamPath,
+    finalUrl: u.toString(),
+  });
+
   return u.toString();
 }
 
 async function handler(req: NextRequest) {
+  console.log("🔍 BFF Handler:", {
+    method: req.method,
+    pathname: req.nextUrl.pathname,
+    search: req.nextUrl.search,
+    API_BASE,
+  });
+
   if (!API_BASE) {
     return NextResponse.json(
       { message: "NEXT_PUBLIC_API_URL not set" },
@@ -48,8 +63,15 @@ async function handler(req: NextRequest) {
 
   let upstream: Response;
   try {
+    console.log("🔍 BFF Fetching:", url);
     upstream = await fetch(url, init);
-  } catch {
+    console.log("🔍 BFF Response:", {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      url: upstream.url,
+    });
+  } catch (error) {
+    console.error("🔍 BFF Fetch Error:", error);
     return NextResponse.json(
       { message: "upstream_unreachable" },
       { status: 502 }

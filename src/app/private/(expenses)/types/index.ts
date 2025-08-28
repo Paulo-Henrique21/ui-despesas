@@ -5,7 +5,7 @@ export interface Expense {
   dueDay: number;
   dueDate: string;
   category: string;
-  status: "paid" | "unpaid" | "due";
+  status: "paid" | "unpaid" | "due" | "due_today";
 }
 
 export interface SortConfig {

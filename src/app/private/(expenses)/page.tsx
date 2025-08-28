@@ -72,8 +72,8 @@ export default function DespesasPage() {
   }
 
   return (
-    <div className="w-full flex justify-center h-full p-4 sm:p-6">
-      <div className="w-full max-w-5xl space-y-4 h-full grid grid-cols-1">
+    <div className="w-full flex justify-center h-full p-4">
+      <div className="w-full max-w-6xl space-y-4 h-full grid grid-cols-1">
         <Tabs
           className="w-full"
           value={selectedMonth}

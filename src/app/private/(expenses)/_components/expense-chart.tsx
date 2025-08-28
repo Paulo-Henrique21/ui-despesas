@@ -23,7 +23,7 @@ interface ExpenseChartProps {
 
 export function ExpenseChart( { chartData, chartConfig }: ExpenseChartProps ) {
     return (
-        <Card className="flex flex-col shadow-none bg-background xl:col-span-1">
+        <Card className="flex flex-col shadow-none bg-background xl:col-span-1 rounded-lg">
             <CardHeader className="items-center pb-0">
                 <CardTitle>Distribuição por categoria</CardTitle>
                 <CardDescription>Mês atual</CardDescription>

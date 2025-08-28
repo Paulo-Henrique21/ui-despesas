@@ -62,6 +62,7 @@ import { SearchableSelect } from "./searchable-select";
 import axios from "axios";
 import { categories, inputDescriptions } from "../constants";
 import { apiFetch } from "@/lib/apiFetch";
+import { useUser } from "@/hooks/user-context";
 
 interface ModalProps {
   onCreate?: ( info: { year: string; month: string } ) => void;
@@ -89,15 +90,28 @@ const FormSchema = z.object( {
 
 export function Modal( { onCreate }: ModalProps ) {
   const [ open, setOpen ] = useState( false );
+  const { user } = useUser();
 
-  const defaultValues = {
+  // Valores iniciais apenas para usuário demo
+  const isDemoUser = user?.email === "demo@exemplo.com" ||
+    user?.email === process.env.NEXT_PUBLIC_DEMO_EMAIL;
+
+  const defaultValues = isDemoUser ? {
     name: "Internet",
-    description: "",
+    description: "Conexão de internet residencial",
     startDate: new Date().toISOString(),
     amount: 70,
     paymentStatus: "unpaid",
     dueDay: 10,
     category: "Casa",
+  } : {
+    name: "",
+    description: "",
+    startDate: new Date().toISOString(),
+    amount: 0,
+    paymentStatus: "unpaid",
+    dueDay: 1,
+    category: "",
   };
 
   const form = useForm<z.infer<typeof FormSchema>>( {
@@ -113,7 +127,7 @@ export function Modal( { onCreate }: ModalProps ) {
 
   async function onSubmit( data: z.infer<typeof FormSchema> ) {
     try {
-      const res = await apiFetch( `/api/bff/expenses`, {
+      const res = await apiFetch( `expenses`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
@@ -186,7 +200,9 @@ export function Modal( { onCreate }: ModalProps ) {
                         render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
-                              <FormLabel className="mr-1">Título</FormLabel>
+                              <FormLabel className="mr-1.5">
+                                Título
+                              </FormLabel>
                               <TooltipProvider delayDuration={0}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -205,10 +221,11 @@ export function Modal( { onCreate }: ModalProps ) {
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                              <span className="text-destructive ml-1">*</span>
                             </div>
                             <FormControl>
                               <Input
-                                placeholder="Evolução de Obra"
+                                placeholder={isDemoUser ? "Internet" : "Nome da despesa"}
                                 {...field}
                               />
                             </FormControl>
@@ -224,7 +241,7 @@ export function Modal( { onCreate }: ModalProps ) {
                         render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
-                              <FormLabel className="mr-1">Descrição</FormLabel>
+                              <FormLabel className="mr-1.5">Descrição</FormLabel>
                               <TooltipProvider delayDuration={0}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -246,7 +263,7 @@ export function Modal( { onCreate }: ModalProps ) {
                             </div>
                             <FormControl>
                               <Textarea
-                                placeholder="descrição da despesa"
+                                placeholder={isDemoUser ? "Conexão de internet residencial" : "Descrição da despesa"}
                                 {...field}
                               />
                             </FormControl>
@@ -261,7 +278,9 @@ export function Modal( { onCreate }: ModalProps ) {
                         render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
-                              <FormLabel className="mr-1">Categoria</FormLabel>
+                              <FormLabel className="mr-1.5">
+                                Categoria
+                              </FormLabel>
                               <TooltipProvider delayDuration={0}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -280,6 +299,7 @@ export function Modal( { onCreate }: ModalProps ) {
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                              <span className="text-destructive ml-1">*</span>
                             </div>
                             <FormControl>
                               <SearchableSelect
@@ -301,7 +321,7 @@ export function Modal( { onCreate }: ModalProps ) {
                         render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
-                              <FormLabel className="mr-1">
+                              <FormLabel className="mr-1.5">
                                 Dia de Vencimento
                               </FormLabel>
                               <TooltipProvider delayDuration={0}>
@@ -322,6 +342,7 @@ export function Modal( { onCreate }: ModalProps ) {
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                              <span className="text-destructive ml-1">*</span>
                             </div>
                             <FormControl>
                               <SearchableSelect
@@ -352,7 +373,7 @@ export function Modal( { onCreate }: ModalProps ) {
                           return (
                             <FormItem>
                               <div className="flex items-center">
-                                <FormLabel className="mr-1">
+                                <FormLabel className="mr-1.5">
                                   Data de Início
                                 </FormLabel>
                                 <TooltipProvider delayDuration={0}>
@@ -373,6 +394,7 @@ export function Modal( { onCreate }: ModalProps ) {
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
+                                <span className="text-destructive ml-1">*</span>
                               </div>
                               <FormControl>
                                 <Popover>
@@ -436,7 +458,7 @@ export function Modal( { onCreate }: ModalProps ) {
                         render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
-                              <FormLabel className="mr-1">
+                              <FormLabel className="mr-1.5">
                                 Valor Padrão
                               </FormLabel>
                               <TooltipProvider delayDuration={0}>
@@ -457,6 +479,7 @@ export function Modal( { onCreate }: ModalProps ) {
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                              <span className="text-destructive ml-1">*</span>
                             </div>
                             <FormControl>
                               <NumberField
@@ -506,7 +529,7 @@ export function Modal( { onCreate }: ModalProps ) {
                         render={( { field } ) => (
                           <FormItem>
                             <div className="flex items-center">
-                              <FormLabel className="mr-1">
+                              <FormLabel className="mr-1.5">
                                 Status de Pagamento
                               </FormLabel>
                               <TooltipProvider delayDuration={0}>
