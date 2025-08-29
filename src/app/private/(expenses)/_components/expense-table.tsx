@@ -60,7 +60,7 @@ const getPinningStyles = ( column: Column<Expense>, isHeader: boolean = false ):
         right: isPinned === "right" ? `${ column.getAfter( "right" ) }px` : undefined,
         position: isPinned ? "sticky" : "relative",
         width: column.getSize(),
-        zIndex: isPinned ? ( isHeader ? 60 : 15 ) : ( isHeader ? 50 : 0 ), // Headers sempre acima das células
+        zIndex: isPinned ? ( isHeader ? 6 : 3 ) : ( isHeader ? 2 : 0 ), // Headers de colunas fixas bem acima de suas células
         top: isPinned && isHeader ? "0px" : undefined, // Apenas headers de colunas fixas têm top: 0
     };
 };
@@ -150,9 +150,9 @@ export function ExpenseTable( {
             header: "Nome",
             accessorKey: "name",
             enableSorting: true,
-            size: 200,
+            size: 250,
             cell: ( { row } ) => (
-                <div className="font-medium max-w-[200px] truncate">
+                <div className="font-medium truncate">
                     {row.getValue( "name" )}
                 </div>
             ),
@@ -161,9 +161,9 @@ export function ExpenseTable( {
             header: "Categoria",
             accessorKey: "category",
             enableSorting: true,
-            size: 150,
+            size: 180,
             cell: ( { row } ) => (
-                <div className="max-w-[150px] truncate">
+                <div className="truncate">
                     {row.getValue( "category" )}
                 </div>
             ),
@@ -172,17 +172,17 @@ export function ExpenseTable( {
             header: "Dia de Vencimento",
             accessorKey: "dueDay",
             enableSorting: true,
-            size: 120,
+            size: 160,
         },
         {
             header: "Valor",
             accessorKey: "amount",
             enableSorting: true,
-            size: 120,
+            size: 130,
             cell: ( { row } ) => {
                 const amount = parseFloat( row.getValue( "amount" ) );
                 return (
-                    <div className="text-right">
+                    <div className="text-left">
                         R$ {amount.toFixed( 2 )}
                     </div>
                 );
@@ -331,34 +331,35 @@ export function ExpenseTable( {
     const table = useReactTable( {
         data: expenses,
         columns,
-        columnResizeMode: "onChange",
+        columnResizeMode: "onEnd",
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
+        defaultColumn: {
+            minSize: 60,
+            maxSize: 400,
+        },
         state: {
             sorting,
             columnPinning: {
-                right: [ "options" ], // Apenas Opções fixo na direita
+                right: [ "actions", "options" ], // Ações e Opções fixas na direita
             },
         },
         enableSortingRemoval: false,
         initialState: {
             columnPinning: {
-                right: [ "options" ],
+                right: [ "actions", "options" ],
             },
         },
     } );
 
     return (
-        <div className="xl:col-span-2">
-            <div className="bg-background rounded-md border flex flex-col h-[416px] overflow-hidden">
+        <div className="w-full">
+            <div className="bg-background rounded-md border border-t-0 flex flex-col h-[300px] sm:h-[350px] md:h-[416px] overflow-hidden w-full">
                 <Table
-                    className="[&_td]:border-border [&_th]:border-border table-fixed border-separate border-spacing-0 [&_tfoot_td]:border-t [&_th]:border-b [&_tr]:border-none [&_tr:not(:last-child)_td]:border-b flex-1"
-                    style={{
-                        width: table.getTotalSize(),
-                    }}
+                    className="[&_td]:border-border [&_th]:border-border table-fixed border-separate border-spacing-0 [&_tfoot_td]:border-t [&_th]:border-b [&_tr]:border-none [&_tr:not(:last-child)_td]:border-b flex-1 w-full"
                 >
-                    <TableHeader>
+                    <TableHeader className="sticky top-0 z-[4] bg-background">
                         {table.getHeaderGroups().map( ( headerGroup ) => (
                             <TableRow key={headerGroup.id} className="bg-muted/50 hover:bg-muted/50">
                                 {headerGroup.headers.map( ( header ) => {
@@ -386,8 +387,8 @@ export function ExpenseTable( {
                                             onClick={column.getToggleSortingHandler()}
                                         >
                                             <div className="flex items-center justify-between gap-2">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="truncate">
+                                                <div className="flex items-center gap-1 min-w-0 flex-1">
+                                                    <span className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                                                         {header.isPlaceholder
                                                             ? null
                                                             : flexRender(
@@ -396,10 +397,10 @@ export function ExpenseTable( {
                                                             )}
                                                     </span>
                                                     {column.getIsSorted() === "asc" && (
-                                                        <ArrowUp className="w-4 h-4" />
+                                                        <ArrowUp className="w-4 h-4 flex-shrink-0" />
                                                     )}
                                                     {column.getIsSorted() === "desc" && (
-                                                        <ArrowDown className="w-4 h-4" />
+                                                        <ArrowDown className="w-4 h-4 flex-shrink-0" />
                                                     )}
                                                 </div>
 

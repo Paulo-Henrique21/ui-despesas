@@ -8,7 +8,6 @@ import {
 } from "react";
 import { createApiUrl } from "@/lib/api";
 
-// Tipo do usuário
 interface User {
   id: string;
   name: string;
@@ -16,10 +15,9 @@ interface User {
   role: string;
   createdAt?: string;
   updatedAt?: string;
-  avatar?: string; // opcional, se vier do backend
+  avatar?: string;
 }
 
-// Tipo do contexto
 interface UserContextType {
   user: User | null;
   loading: boolean;
@@ -28,10 +26,8 @@ interface UserContextType {
   logoutUser: () => void;
 }
 
-// Criação do contexto tipado
 const UserContext = createContext<UserContextType | undefined>( undefined );
 
-// Provider
 export function UserProvider( { children }: { children: ReactNode } ) {
   const [ user, setUser ] = useState<User | null>( null );
   const [ loading, setLoading ] = useState( true );
@@ -40,31 +36,28 @@ export function UserProvider( { children }: { children: ReactNode } ) {
 
   const loginUser = useCallback( ( userData: User ) => {
     setUser( userData );
-    setShouldCheckProfile( true ); // Reabilita verificação após login
+    setShouldCheckProfile( true );
   }, [] );
 
   const logoutUser = useCallback( () => {
     setIsLoggingOut( true );
-    setShouldCheckProfile( false ); // Desabilita verificação durante logout
+    setShouldCheckProfile( false );
     setUser( null );
-    setLoading( false ); // Para que não fique carregando após logout
+    setLoading( false );
 
-    // Após um pequeno delay, limpa o estado de logout
     setTimeout( () => {
       setIsLoggingOut( false );
-      setShouldCheckProfile( true ); // Reabilita para futuras navegações
+      setShouldCheckProfile( true );
     }, 500 );
   }, [] );
 
   useEffect( () => {
     let mounted = true;
 
-    // Se não devemos verificar o perfil (durante logout), não executa
     if ( !shouldCheckProfile || isLoggingOut ) {
       return;
     }
 
-    // Se estamos em páginas de auth, não faz a verificação
     if ( typeof window !== "undefined" && window.location.pathname.startsWith( "/auth" ) ) {
       setLoading( false );
       return;
@@ -82,7 +75,6 @@ export function UserProvider( { children }: { children: ReactNode } ) {
           const data = await res.json().catch( () => ( {} ) );
           setUser( data.user ?? null );
         } else if ( res.status === 401 ) {
-          // só redireciona quando de fato NÃO está autenticado
           setUser( null );
           if (
             typeof window !== "undefined" &&
@@ -91,14 +83,12 @@ export function UserProvider( { children }: { children: ReactNode } ) {
             window.location.replace( "/auth/login" );
           }
         } else {
-          // 404/5xx/timeouts: não redireciona para não criar loop
           console.warn( "Profile check failed:", res.status );
           setUser( null );
         }
       } catch ( e ) {
         console.error( "Profile check error:", e );
         setUser( null );
-        // sem redirect aqui
       } finally {
         if ( mounted ) setLoading( false );
       }
@@ -117,7 +107,6 @@ export function UserProvider( { children }: { children: ReactNode } ) {
   );
 }
 
-// Hook para usar o contexto
 export function useUser() {
   const context = useContext( UserContext );
   if ( !context ) {

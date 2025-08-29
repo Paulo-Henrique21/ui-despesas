@@ -10,6 +10,7 @@ interface IndicatorCardsProps {
     totalContasNaoPagas: number;
     totalMes: number;
     percentualPago: number;
+    quantidadeContasTotal: number;
 }
 
 export function IndicatorCards( {
@@ -18,6 +19,7 @@ export function IndicatorCards( {
     totalContasNaoPagas,
     totalMes,
     percentualPago,
+    quantidadeContasTotal,
 }: IndicatorCardsProps ) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -28,7 +30,7 @@ export function IndicatorCards( {
                         <p className="text-sm text-muted-foreground">Maior Categoria</p>
                         <p className="text-2xl font-bold">{categoriaTop.browser}</p>
                         <p className="text-xs text-muted-foreground truncate">
-                            totalizou {formatCurrency( categoriaTop.visitors )}
+                            total: {formatCurrency( categoriaTop.visitors )}
                         </p>
                     </div>
                     <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -37,32 +39,34 @@ export function IndicatorCards( {
                 </div>
             </Card>
 
-            {/* Contas Pendentes */}
+            {/* Gasto Mensal Total */}
             <Card className="p-6 border rounded-lg shadow-none bg-background">
                 <div className="flex items-start justify-between">
                     <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">Contas Pendentes</p>
-                        <p className="text-2xl font-bold">{quantidadeContasNaoPagas}</p>
+                        <p className="text-sm text-muted-foreground">Gasto Mensal Total</p>
+                        <p className="text-2xl font-bold">{formatCurrency( totalMes )}</p>
                         <p className="text-xs text-muted-foreground">
-                            {formatCurrency( totalContasNaoPagas )} em aberto
+                            contas totais: {quantidadeContasTotal}
                         </p>
                     </div>
-                    <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                        <Calendar className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                    <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <DollarSign className="w-4 h-4 text-green-600 dark:text-green-400" />
                     </div>
                 </div>
             </Card>
 
-            {/* Total do mês */}
+            {/* Gasto Mensal em Aberto */}
             <Card className="p-6 border rounded-lg shadow-none bg-background">
                 <div className="flex items-start justify-between">
                     <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">Total do mês</p>
-                        <p className="text-2xl font-bold">{formatCurrency( totalMes )}</p>
-                        <p className="text-xs text-muted-foreground">valor total</p>
+                        <p className="text-sm text-muted-foreground">Gasto Mensal em Aberto</p>
+                        <p className="text-2xl font-bold">{formatCurrency( totalContasNaoPagas )}</p>
+                        <p className="text-xs text-muted-foreground">
+                            contas pendentes: {quantidadeContasNaoPagas}
+                        </p>
                     </div>
-                    <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <DollarSign className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                        <Calendar className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                     </div>
                 </div>
             </Card>

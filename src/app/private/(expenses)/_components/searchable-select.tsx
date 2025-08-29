@@ -1,5 +1,3 @@
-// Crie um novo arquivo ou coloque no topo do modal.tsx
-
 import {
   Command,
   CommandEmpty,
@@ -25,19 +23,19 @@ interface Option {
 
 interface SearchableSelectProps {
   value: string;
-  onChange: (value: string) => void;
+  onChange: ( value: string ) => void;
   options: Option[];
   placeholder?: string;
 }
 
-export function SearchableSelect({
+export function SearchableSelect( {
   value,
   onChange,
   options,
   placeholder,
-}: SearchableSelectProps) {
+}: SearchableSelectProps ) {
   const id = useId();
-  const [open, setOpen] = useState(false);
+  const [ open, setOpen ] = useState( false );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -49,9 +47,9 @@ export function SearchableSelect({
           aria-expanded={open}
           className="bg-background hover:bg-background border-input w-full justify-between px-3 font-normal outline-offset-0 outline-none focus-visible:outline-[3px]"
         >
-          <span className={cn("truncate", !value && "text-muted-foreground")}>
+          <span className={cn( "truncate", !value && "text-muted-foreground" )}>
             {value
-              ? options.find((opt) => opt.value === value)?.label
+              ? options.find( ( opt ) => opt.value === value )?.label
               : placeholder}
           </span>
           <ChevronDownIcon
@@ -68,18 +66,18 @@ export function SearchableSelect({
         <Command>
           <CommandInput placeholder={`Buscar...`} />
           <CommandList
-            onWheel={(e) => e.stopPropagation()}
+            onWheel={( e ) => e.stopPropagation()}
             className="max-h-40"
           >
             <CommandEmpty>Nenhuma opção encontrada.</CommandEmpty>
             <CommandGroup>
-              {options.map((opt) => (
+              {options.map( ( opt ) => (
                 <CommandItem
                   key={opt.value}
                   value={opt.value}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue);
-                    setOpen(false);
+                  onSelect={( currentValue ) => {
+                    onChange( currentValue );
+                    setOpen( false );
                   }}
                 >
                   {opt.label}
@@ -87,7 +85,7 @@ export function SearchableSelect({
                     <CheckIcon size={16} className="ml-auto" />
                   )}
                 </CommandItem>
-              ))}
+              ) )}
             </CommandGroup>
           </CommandList>
         </Command>

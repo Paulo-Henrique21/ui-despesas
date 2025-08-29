@@ -28,6 +28,7 @@ export default function DespesasPage() {
     totalContasNaoPagas,
     totalMes,
     percentualPago,
+    quantidadeContasTotal,
     setSelectedMonth,
     setSelectedYear,
     setHasAnyBase,
@@ -72,10 +73,10 @@ export default function DespesasPage() {
   }
 
   return (
-    <div className="w-full flex justify-center h-full p-4">
-      <div className="w-full max-w-6xl space-y-4 h-full grid grid-cols-1">
+    <div className="w-full flex justify-center h-full p-0">
+      <div className="w-full max-w-6xl h-full grid grid-cols-1">
         <Tabs
-          className="w-full"
+          className="w-full gap-0"
           value={selectedMonth}
           onValueChange={setSelectedMonth}
         >
@@ -86,7 +87,7 @@ export default function DespesasPage() {
           />
 
           {monthList.map( ( month ) => (
-            <TabsContent key={month.value} value={month.value}>
+            <TabsContent key={month.value} value={month.value} className="mt-0 pb-4 px-4">
               {tabLoading ? (
                 <LoadingSkeleton />
               ) : (
@@ -99,13 +100,10 @@ export default function DespesasPage() {
                         totalContasNaoPagas={totalContasNaoPagas}
                         totalMes={totalMes}
                         percentualPago={percentualPago}
+                        quantidadeContasTotal={quantidadeContasTotal}
                       />
 
-                      <div className="space-y-4 xl:space-y-0 xl:grid xl:grid-cols-3 xl:gap-4">
-                        <ExpenseChart
-                          chartData={chartData}
-                          chartConfig={chartConfig}
-                        />
+                      <div className="space-y-4">
                         <ExpenseTable
                           expenses={sortedExpenses}
                           sortConfig={sortConfig}
@@ -113,6 +111,10 @@ export default function DespesasPage() {
                           onTogglePayment={handleTogglePayment}
                           onDelete={handleDelete}
                           onEditSuccess={handleEditSuccess}
+                        />
+                        <ExpenseChart
+                          chartData={chartData}
+                          chartConfig={chartConfig}
                         />
                       </div>
                     </div>

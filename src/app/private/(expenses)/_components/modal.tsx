@@ -56,7 +56,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Loader2 } from "lucide-react"; // Adicione este import para um spinner
+import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "./searchable-select";
 import axios from "axios";
@@ -68,7 +68,6 @@ interface ModalProps {
   onCreate?: ( info: { year: string; month: string } ) => void;
 }
 
-// Função utilitária para buscar a descrição pelo nome do campo
 function getDescription( name: string ) {
   return (
     inputDescriptions.find( ( item ) => item.name === name )?.description || ""
@@ -92,7 +91,6 @@ export function Modal( { onCreate }: ModalProps ) {
   const [ open, setOpen ] = useState( false );
   const { user } = useUser();
 
-  // Valores iniciais apenas para usuário demo
   const isDemoUser = user?.email === "demo@exemplo.com" ||
     user?.email === process.env.NEXT_PUBLIC_DEMO_EMAIL;
 
@@ -140,9 +138,7 @@ export function Modal( { onCreate }: ModalProps ) {
         try {
           const payload = await res.json();
           msg = payload?.message || msg;
-        } catch {
-          /* ignore parse error */
-        }
+        } catch { }
         throw new Error( msg );
       }
 
@@ -163,9 +159,9 @@ export function Modal( { onCreate }: ModalProps ) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="cursor-pointer">
+        <Button className="cursor-pointer h-9 w-9 sm:h-auto sm:w-auto sm:px-4 sm:py-2">
           <PlusIcon size={16} aria-hidden="true" />
-          Nova despesa
+          <span className="hidden sm:inline ml-1">Nova despesa</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="flex flex-col gap-0 p-0 sm:max-h-[min(640px,80vh)] sm:max-w-lg [&>button:last-child]:top-3.5">
@@ -193,7 +189,6 @@ export function Modal( { onCreate }: ModalProps ) {
                       onSubmit={form.handleSubmit( onSubmit )}
                       className="space-y-6"
                     >
-                      {/* Title */}
                       <FormField
                         control={form.control}
                         name="name"
@@ -234,7 +229,6 @@ export function Modal( { onCreate }: ModalProps ) {
                         )}
                       />
 
-                      {/* Description */}
                       <FormField
                         control={form.control}
                         name="description"
@@ -314,7 +308,6 @@ export function Modal( { onCreate }: ModalProps ) {
                         )}
                       />
 
-                      {/* Due Day */}
                       <FormField
                         control={form.control}
                         name="dueDay"
@@ -360,7 +353,6 @@ export function Modal( { onCreate }: ModalProps ) {
                         )}
                       />
 
-                      {/* Start Date */}
                       <FormField
                         control={form.control}
                         name="startDate"
@@ -437,7 +429,7 @@ export function Modal( { onCreate }: ModalProps ) {
                                         if ( selected ) {
                                           field.onChange(
                                             selected.toISOString()
-                                          ); // salva no formato string
+                                          );
                                         }
                                       }}
                                       locale={ptBR}
@@ -451,7 +443,6 @@ export function Modal( { onCreate }: ModalProps ) {
                         }}
                       />
 
-                      {/* Default Value */}
                       <FormField
                         control={form.control}
                         name="amount"
@@ -522,7 +513,6 @@ export function Modal( { onCreate }: ModalProps ) {
                         )}
                       />
 
-                      {/* Payment Status */}
                       <FormField
                         control={form.control}
                         name="paymentStatus"
@@ -582,7 +572,6 @@ export function Modal( { onCreate }: ModalProps ) {
               Cancelar
             </Button>
           </DialogClose>
-          {/* Botão de submit movido para o footer */}
           <Button
             type="submit"
             form="dialog-form"

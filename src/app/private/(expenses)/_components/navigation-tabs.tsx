@@ -29,45 +29,47 @@ export function NavigationTabs( {
     onCreate,
 }: NavigationTabsProps ) {
     return (
-        <div className="flex gap-2 w-full">
-            <ScrollArea className="grid pb-2" type="always">
-                <TabsList>
-                    {monthList.map( ( month ) => (
-                        <TooltipProvider key={month.value}>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div>
-                                        <TabsTrigger
-                                            value={month.value}
-                                            className="cursor-pointer capitalize"
-                                        >
-                                            {month.label}
-                                        </TabsTrigger>
-                                    </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>{month.full}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    ) )}
-                </TabsList>
-                <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-            <Select onValueChange={onYearChange} value={selectedYear}>
-                <SelectTrigger className="w-28">
-                    <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                    {yearOptions.map( ( year ) => (
-                        <SelectItem key={year} value={year}>
-                            {year}
-                        </SelectItem>
-                    ) )}
-                </SelectContent>
-            </Select>
-            <div className="ml-auto">
-                <Modal onCreate={onCreate} />
+        <div className="sticky top-16 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
+            <div className="flex gap-2 w-full items-start">
+                <ScrollArea className="grid pb-2 flex-1" type="always">
+                    <TabsList>
+                        {monthList.map( ( month ) => (
+                            <TooltipProvider key={month.value}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div>
+                                            <TabsTrigger
+                                                value={month.value}
+                                                className="cursor-pointer capitalize"
+                                            >
+                                                {month.label}
+                                            </TabsTrigger>
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{month.full}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        ) )}
+                    </TabsList>
+                    <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+                <Select onValueChange={onYearChange} value={selectedYear}>
+                    <SelectTrigger className="w-28">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {yearOptions.map( ( year ) => (
+                            <SelectItem key={year} value={year}>
+                                {year}
+                            </SelectItem>
+                        ) )}
+                    </SelectContent>
+                </Select>
+                <div className="ml-auto">
+                    <Modal onCreate={onCreate} />
+                </div>
             </div>
         </div>
     );

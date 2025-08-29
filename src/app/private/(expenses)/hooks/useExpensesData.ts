@@ -262,6 +262,7 @@ export function useExpensesData() {
   );
   const totalMes = visualExpenses.reduce((acc, cur) => acc + cur.amount, 0);
   const pagas = visualExpenses.filter((e) => e.status === "paid").length;
+  const quantidadeContasTotal = visualExpenses.length;
   const percentualPago = visualExpenses.length
     ? Math.round((pagas / visualExpenses.length) * 100)
     : 0;
@@ -300,6 +301,7 @@ export function useExpensesData() {
     totalContasNaoPagas,
     totalMes,
     percentualPago,
+    quantidadeContasTotal,
 
     // Funções
     handleSort,

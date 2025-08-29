@@ -27,11 +27,6 @@ import { toast } from "sonner";
 import { ContainerCenter } from "@/components/customized/container-center";
 import { useUser } from "@/hooks/user-context";
 
-// 👇 você precisa criar esses 2 utilitários conforme combinamos
-import { WakeOverlay } from "@/components/customized/wake-overlay";
-import { wakeApi } from "@/lib/wakeApi";
-import { Navbar } from "@/components/customized/navbar";
-
 const FormSchema = z.object( {
   email: z.string().email( "Por favor, insira um email válido." ),
   password: z.string().min( 1, "Senha é obrigatória." ),
@@ -39,7 +34,6 @@ const FormSchema = z.object( {
 
 export default function Login() {
   const [ isPasswordVisible, setIsPasswordVisible ] = useState( false );
-  const [ waking, setWaking ] = useState( false );     // controla o overlay
   const [ submitting, setSubmitting ] = useState( false );
 
   // Valores padrão para demonstração
@@ -91,8 +85,6 @@ export default function Login() {
 
   return (
     <ContainerCenter>
-      {waking && <WakeOverlay msg="Acordando servidor..." />}
-
       <div className="flex justify-center items-center py-8 min-h-[calc(100vh-7rem)]">
         <div className="max-w-md w-full space-y-4">
           <Card>
@@ -117,7 +109,7 @@ export default function Login() {
                             type="email"
                             placeholder="m@example.com"
                             {...field}
-                            disabled={submitting || waking}
+                            disabled={submitting}
                           />
                         </FormControl>
                         <FormMessage />
@@ -141,7 +133,7 @@ export default function Login() {
                               className="pe-9"
                               type={isPasswordVisible ? "text" : "password"}
                               {...field}
-                              disabled={submitting || waking}
+                              disabled={submitting}
                             />
                             <button
                               className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50"
@@ -152,7 +144,7 @@ export default function Login() {
                               }
                               aria-pressed={isPasswordVisible}
                               aria-controls="password"
-                              disabled={submitting || waking}
+                              disabled={submitting}
                             >
                               {isPasswordVisible ? (
                                 <EyeOffIcon size={16} aria-hidden="true" />
@@ -167,8 +159,8 @@ export default function Login() {
                     )}
                   />
 
-                  <Button type="submit" className="w-full" disabled={submitting || waking}>
-                    {submitting || waking ? "Entrando..." : "Login"}
+                  <Button type="submit" className="w-full" disabled={submitting}>
+                    {submitting ? "Entrando..." : "Login"}
                   </Button>
                 </form>
               </Form>
@@ -183,7 +175,7 @@ export default function Login() {
                     form.setValue( "password", demoPassword );
                     form.handleSubmit( onSubmit )();
                   }}
-                  disabled={submitting || waking}
+                  disabled={submitting}
                 >
                   Entrar como visitante
                 </Button>

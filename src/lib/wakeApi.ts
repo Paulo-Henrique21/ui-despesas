@@ -1,7 +1,7 @@
-// src/lib/wakeApi.ts
-export async function wakeApi(
-  { maxMs = 15000, stepMs = 1500 }: { maxMs?: number; stepMs?: number } = {}
-) {
+export async function wakeApi({
+  maxMs = 15000,
+  stepMs = 1500,
+}: { maxMs?: number; stepMs?: number } = {}) {
   const start = Date.now();
   while (Date.now() - start < maxMs) {
     try {
