@@ -241,9 +241,9 @@ export default function Signup() {
                 <Button type="submit" className="w-full mt-4" disabled={isSubmitting}>
                   {isSubmitting ? "Criando conta..." : "Criar Conta"}
                 </Button>
-                <div className="mt-4 text-center text-sm">
-                  Já tem uma conta?{" "}
-                  <Link href="/auth/login" className="underline">
+                <div className="mt-4 text-center text-xs text-muted-foreground">
+                  <span className="font-medium">Já tem uma conta?</span>{" "}
+                  <Link href="/auth/login" className="underline hover:text-foreground text-primary">
                     Entrar
                   </Link>
                 </div>
