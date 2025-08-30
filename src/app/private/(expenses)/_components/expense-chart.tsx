@@ -82,7 +82,14 @@ export function ExpenseChart( { chartData, chartConfig }: ExpenseChartProps ) {
                             width={50}
                             tickMargin={5}
                         >
-                            <Label value="Real (R$)" angle={-90} position="left" offset={2} dy={-30} />
+                            <Label value="Real (R$)" angle={-90} position="left" offset={2} 
+                                style={{
+                                    textAnchor: 'middle',
+                                    // fill: 'blue',
+                                    fontSize: '12px',
+                                    fontWeight: '500'
+                                }}
+                            />
                         </YAxis>
 
                         <ChartTooltip
