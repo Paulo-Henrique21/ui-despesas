@@ -181,9 +181,13 @@ export function ExpenseTable( {
             size: 130,
             cell: ( { row } ) => {
                 const amount = parseFloat( row.getValue( "amount" ) );
+                const formattedAmount = amount.toLocaleString( 'pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                } );
                 return (
                     <div className="text-left">
-                        R$ {amount.toFixed( 2 )}
+                        R$ {formattedAmount}
                     </div>
                 );
             },
