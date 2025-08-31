@@ -153,9 +153,12 @@ docker run -p 3000:3000 \
 
 ## 📱 Screenshots
 
-Adicione suas capturas de tela na pasta `public/images/`:
-- `ui-despesas.png` - Tela principal
-- `login-despesas.png` - Tela de login
+### Tela Principal
+![Tela Principal](./public/images/ui-despesas.png)
+
+### Tela de Login
+![Tela de Login](./public/images/login-despesas.png)
+
 
 ## 👨‍💻 Autor
 
