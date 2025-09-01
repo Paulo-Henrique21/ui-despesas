@@ -28,7 +28,7 @@ Uma aplicação moderna e intuitiva para controle de despesas recorrentes, desen
 - **date-fns** - Manipulação de datas
 - **class-variance-authority** - Variantes de classes CSS
 
-## 📋 Pré-requisitos
+## Pré-requisitos
 
 - Node.js 18+ 
 - pnpm (recomendado) ou npm
